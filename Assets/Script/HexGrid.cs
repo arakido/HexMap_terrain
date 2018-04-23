@@ -64,6 +64,8 @@ public class HexGrid : MonoBehaviour {
         label.rectTransform.anchoredPosition3D = new Vector2(position.x,position.z);
         label.rectTransform.Rotate( Vector3.zero );
         label.text = cell.coordinates.ToStringOnSeparateLines() ;
+
+        cell.uiRect = label.rectTransform;
     }
 
 	
@@ -71,6 +73,17 @@ public class HexGrid : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 	}
+
+    public void Refresh() {
+        hexMesh.Triangulate( cells );
+    }
+
+    public HexCell GetCell( Vector3 position ) {
+        position = transform.InverseTransformPoint( position );
+        HexCoordinates coordinates = HexCoordinates.FromPositon( position );
+        int index = coordinates.X + coordinates.Z * width + coordinates.Z / 2;
+        return cells[ index ];
+    }
 
 
     public void TouchCell( Vector3 position , Color color) {

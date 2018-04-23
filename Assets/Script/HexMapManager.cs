@@ -4,10 +4,11 @@ using UnityEngine.EventSystems ;
 
 public class HexMapManager : MonoBehaviour {
 
-    private Color[] colors ;
     public HexGrid hexGrid ;
 
+    private Color[] colors ;
     private Color activeColor ;
+    private int activeElevation;
 
     private void Awake() {
         colors = new Color[] { Color.yellow, Color.green, Color.blue, Color.cyan, Color.white, };
@@ -31,12 +32,23 @@ public class HexMapManager : MonoBehaviour {
         Ray inputRay = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
         if (Physics.Raycast(inputRay, out hit)) {
-            hexGrid.TouchCell( hit.point , activeColor ) ;
+            //hexGrid.TouchCell( hit.point , activeColor ) ;
+            EditCell( hexGrid.GetCell( hit.point ) );
         }
     }
 
     public void SelectColor( int index ) {
         activeColor = colors[ index ] ;
+    }
+
+    public void SetElevation( float elevation ) {
+        activeElevation = (int)elevation;
+    }
+
+    public void EditCell( HexCell cell ) {
+        cell.color = activeColor;
+        cell.Elevation = activeElevation;
+        hexGrid.Refresh();
     }
 }
 

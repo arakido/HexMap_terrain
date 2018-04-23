@@ -2,14 +2,17 @@
 using System.Collections;
 
 public class HexMetrics {
-    public const float outerRadius = 10f ;
+    public const float outerRadius = 10f; //六边型同心圆的半径
+    //六边形边长
+    public static float innerRadius { get { return outerRadius * Mathf.Sin( 60 * Mathf.Deg2Rad ); } }
 
-    public static float innerRadius {
-        get { return outerRadius * Mathf.Sin( 60 * Mathf.Deg2Rad ) ; }
-    }
-
-    public const float solidFactor = 0.75f ;
-    public const float blendFactor = 1 - solidFactor ;
+    public const float solidFactor = 0.75f;     //内三角所占的比例
+    public const float blendFactor = 1 - solidFactor;   //外梯形的比例
+    public const float elevationStep = 3f;  //高度
+    public const int terrarcesPerSlope = 2; //台阶数
+    public const int terraceSetps = terrarcesPerSlope * 2 + 1;  //连接的段数
+    public const float horizontalTerraceStepSize = 1f / terraceSetps;   //水平方向
+    public const float verticalTerraceSetSize = 1f / ( terrarcesPerSlope + 1 ); //垂直
 
     private static Vector3[] _corners ;
 
@@ -63,12 +66,38 @@ public class HexMetrics {
         return GetSecondConrner(direction) * solidFactor ;
     }
 
+    //获取一个三角形的外梯形高度
     public static Vector3 GetOneBridge( HexDirectionEnum direction ) {
         return GetTwoBridge( direction ) * 0.5f ;
     }
 
+    //两个梯形高度
     public static Vector3 GetTwoBridge( HexDirectionEnum direction ) {
         return (GetFirstCorner( direction ) + GetSecondConrner( direction )) * blendFactor ;
+    }
+
+    public static Vector3 TerraceLerp( Vector3 a, Vector3 b, int step )
+    {
+
+        float h = step * HexMetrics.horizontalTerraceStepSize;
+        a.x += ( b.x - a.x ) * h;
+        a.z += ( b.z - a.z ) * h;
+        float v = ( ( step + 1 ) / 2 ) * HexMetrics.verticalTerraceSetSize;
+        a.y += ( b.y - a.y ) * v;
+        return a;
+    }
+
+    public static Color TerraceLerp( Color a, Color b, int step )
+    {
+        float h = step * HexMetrics.horizontalTerraceStepSize;
+        return Color.Lerp( a, b, h );
+    }
+
+    public static HexEdgeType GetEdgeType( int elevation1, int elevation2 )
+    {
+        if ( elevation1 == elevation2 ) return HexEdgeType.Flat;
+        if ( Mathf.Abs( elevation1 - elevation2 ) == 1 ) return HexEdgeType.Slope;
+        return HexEdgeType.Cliff;
     }
 
 }
@@ -87,6 +116,13 @@ public enum HexDirectionEnum {
     TopRight ,
 
     Length ,
+}
+
+//桥接类型
+public enum HexEdgeType {
+    Flat,  //平地
+    Slope, //斜坡
+    Cliff, //绝壁
 }
 
 public static class HexDirectionExtensions {
