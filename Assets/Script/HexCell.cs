@@ -49,8 +49,11 @@ public class HexCell : MonoBehaviour {
         return neighbors[ (int) direction ] ;
     }
 
-    public HexEdgeType GetEdgeType( HexDirectionEnum direction )
-    {
-        return HexMetrics.GetEdgeType( Elevation, GetNeighbor( direction ).Elevation );
+    public HexEdgeType GetEdgeType( HexDirectionEnum direction ) {
+        return HexMetrics.GetEdgeType( Elevation , GetNeighbor( direction ).Elevation ) ;
+    }
+
+    public HexEdgeType GetEdgeType( HexCell otherCell ) {
+        return HexMetrics.GetEdgeType( Elevation , otherCell.Elevation ) ;
     }
 }

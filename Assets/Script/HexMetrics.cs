@@ -82,7 +82,7 @@ public class HexMetrics {
         float h = step * HexMetrics.horizontalTerraceStepSize;
         a.x += ( b.x - a.x ) * h;
         a.z += ( b.z - a.z ) * h;
-        float v = ( ( step + 1 ) / 2 ) * HexMetrics.verticalTerraceSetSize;
+        float v = Mathf.FloorToInt( ( step + 1 ) / 2f ) * HexMetrics.verticalTerraceSetSize;
         a.y += ( b.y - a.y ) * v;
         return a;
     }
