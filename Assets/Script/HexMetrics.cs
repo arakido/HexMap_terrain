@@ -106,14 +106,15 @@ public class HexMetrics {
 /// <summary>
 /// 六边形方向枚举,
 /// 要和六边形绘制的方向保持一致
+/// NE, E, SE, SW, W, NW
 /// </summary>
 public enum HexDirectionEnum {
-    Right ,
-    BottomRight ,
-    BottomLeft ,
-    Left ,
-    TopLeft ,
-    TopRight ,
+    Right ,         //E
+    BottomRight ,   //SE
+    BottomLeft ,    //SW
+    Left ,          //W
+    TopLeft ,       //NW
+    TopRight ,      //NE
 
     Length ,
 }
