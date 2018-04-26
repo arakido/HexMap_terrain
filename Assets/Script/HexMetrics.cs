@@ -13,6 +13,7 @@ public class HexMetrics {
     public const int terraceSetps = terrarcesPerSlope * 2 + 1;  //连接的段数
     public const float horizontalTerraceStepSize = 1f / terraceSetps;   //水平方向
     public const float verticalTerraceSetSize = 1f / ( terrarcesPerSlope + 1 ); //垂直
+    public const int elevationDiffer = 1 ;
 
     private static Vector3[] _corners ;
 
@@ -96,7 +97,7 @@ public class HexMetrics {
     public static HexEdgeType GetEdgeType( int elevation1, int elevation2 )
     {
         if ( elevation1 == elevation2 ) return HexEdgeType.Flat;
-        if ( Mathf.Abs( elevation1 - elevation2 ) == 1 ) return HexEdgeType.Slope;
+        if ( Mathf.Abs( elevation1 - elevation2 ) == elevationDiffer) return HexEdgeType.Slope;
         return HexEdgeType.Cliff;
     }
 
@@ -121,9 +122,18 @@ public enum HexDirectionEnum {
 
 //桥接类型
 public enum HexEdgeType {
-    Flat,  //平地
-    Slope, //斜坡
-    Cliff, //绝壁
+    /// <summary>
+    /// 平地
+    /// </summary>
+    Flat,
+    /// <summary>
+    /// 斜坡
+    /// </summary>
+    Slope,
+    /// <summary>
+    /// 绝壁
+    /// </summary>
+    Cliff,
 }
 
 public static class HexDirectionExtensions {
