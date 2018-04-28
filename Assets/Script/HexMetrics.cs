@@ -2,18 +2,24 @@
 using System.Collections;
 
 public class HexMetrics {
+
     public const float outerRadius = 10f; //六边型同心圆的半径
     //六边形边长
     public static float innerRadius { get { return outerRadius * Mathf.Sin( 60 * Mathf.Deg2Rad ); } }
 
-    public const float solidFactor = 0.75f;     //内三角所占的比例
+    public const float solidFactor = 0.8f;     //内三角所占的比例
     public const float blendFactor = 1 - solidFactor;   //外梯形的比例
     public const float elevationStep = 3f;  //高度
     public const int terrarcesPerSlope = 2; //台阶数
     public const int terraceSetps = terrarcesPerSlope * 2 + 1;  //连接的段数
     public const float horizontalTerraceStepSize = 1f / terraceSetps;   //水平方向
     public const float verticalTerraceSetSize = 1f / ( terrarcesPerSlope + 1 ); //垂直
-    public const int elevationDiffer = 1 ;
+    public const int elevationDiffer = 1 ;  //采集点系数
+
+    public static Texture2D noiseSource;    //噪声纹理
+    public const float cellPerturbStrength = 4f ;   //噪声干扰强度
+    public const float noiseScale = 0.003f ;
+    public const float elevationPerturbStrength = 1.5f ;    //y周方向的干扰范围
 
     private static Vector3[] _corners ;
 
@@ -100,6 +106,24 @@ public class HexMetrics {
         if ( Mathf.Abs( elevation1 - elevation2 ) == elevationDiffer) return HexEdgeType.Slope;
         return HexEdgeType.Cliff;
     }
+
+    #region 噪声
+
+    public static Vector4 SampleNoise( Vector3 position ) {
+        return noiseSource.GetPixelBilinear( position.x * noiseScale, position.z * noiseScale) ;
+    }
+
+    public static Vector3 SampleNoisePerturb( Vector3 position ) {
+        Vector4 sample = SampleNoise( position ) ;
+        position.x += (sample.x * 2f - 1f) * cellPerturbStrength ;
+        //position.y += (sample.y * 2f - 1f) * cellPerturbStrength ;
+        position.z += (sample.z * 2f - 1f) * cellPerturbStrength ;
+
+        return position ;
+    }
+
+
+    #endregion
 
 }
 
