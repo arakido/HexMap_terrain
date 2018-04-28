@@ -13,7 +13,7 @@ public class HexCell : MonoBehaviour {
     public Color Color {
         get {return _color;}
         set {
-            if ( _color == value ) return ;
+            //if ( _color == value ) return ;
             _color = value ;
             Refresh();
         }
@@ -23,7 +23,7 @@ public class HexCell : MonoBehaviour {
     public int Elevation {
         get { return elevation >= 0 ? elevation : 0 ; }
         set {
-            if ( elevation == value ) return ;
+            //if ( elevation == value ) return ;
             elevation = value;
             SetPosition();
         }
