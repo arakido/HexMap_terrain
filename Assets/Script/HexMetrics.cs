@@ -3,6 +3,9 @@ using System.Collections;
 
 public class HexMetrics {
 
+    public const int chunkSizeX = 5 ;   //六边形集的长
+    public const int chunkSizeZ = 5 ;   //宽
+
     public const float outerRadius = 10f; //六边型同心圆的半径
     //六边形边长
     public static float innerRadius { get { return outerRadius * Mathf.Sin( 60 * Mathf.Deg2Rad ); } }
@@ -100,8 +103,7 @@ public class HexMetrics {
         return Color.Lerp( a, b, h );
     }
 
-    public static HexEdgeType GetEdgeType( int elevation1, int elevation2 )
-    {
+    public static HexEdgeType GetEdgeType( int elevation1, int elevation2 ) {
         if ( elevation1 == elevation2 ) return HexEdgeType.Flat;
         if ( Mathf.Abs( elevation1 - elevation2 ) == elevationDiffer) return HexEdgeType.Slope;
         return HexEdgeType.Cliff;

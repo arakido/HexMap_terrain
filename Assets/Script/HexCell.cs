@@ -4,12 +4,26 @@ using System.Collections;
 public class HexCell : MonoBehaviour {
     public RectTransform uiRect;
     public HexCoordinates coordinates ;
-    public Color color ;
 
-    private int elevation;
-    public int Elevation {
-        get { return elevation; }
+    public HexGridChunk chunk;
+
+
+    private Color _color ;
+
+    public Color Color {
+        get {return _color;}
         set {
+            if ( _color == value ) return ;
+            _color = value ;
+            Refresh();
+        }
+    }
+
+    private int elevation = int.MinValue;
+    public int Elevation {
+        get { return elevation >= 0 ? elevation : 0 ; }
+        set {
+            if ( elevation == value ) return ;
             elevation = value;
             SetPosition();
         }
@@ -28,6 +42,18 @@ public class HexCell : MonoBehaviour {
 	
 	}
 
+    private void Refresh() {
+        if ( chunk ) {
+            chunk.Refresh() ;
+            for ( int i = 0 ; i < neighbors.Length ; i++ ) {
+                HexCell neighbor = neighbors[ i ] ;
+                if ( neighbor != null && neighbor.chunk != chunk ) {
+                    neighbor.chunk.Refresh();
+                }
+            }
+        }
+    }
+
     private void SetPosition() {
         Vector3 position = transform.localPosition;
         position.y = Elevation * HexMetrics.elevationStep;
@@ -37,6 +63,7 @@ public class HexCell : MonoBehaviour {
         Vector3 uiPosition = uiRect.localPosition;
         uiPosition.z = -position.y;
         uiRect.localPosition = uiPosition;
+        Refresh() ;
     }
 
     //设置相邻的三角形
