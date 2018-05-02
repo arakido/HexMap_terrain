@@ -17,20 +17,31 @@ public class HexMesh : MonoBehaviour {
         public Vector3 v2 ;
         public Vector3 v3 ;
         public Vector3 v4 ;
+        public Vector3 v5 ;
 
         public EdgeVertices( Vector3 corner1 , Vector3 corner2) {
             v1 = corner1;
-            v2 = Vector3.Lerp(corner1, corner2, 1f / 3);
-            v3 = Vector3.Lerp(corner1, corner2, 2f / 3);
-            v4 = corner2;
+            v2 = Vector3.Lerp(corner1, corner2, 1f / 4);
+            v3 = Vector3.Lerp(corner1, corner2, 2f / 4);
+            v4 = Vector3.Lerp(corner1, corner2, 3f / 4);
+            v5 = corner2;
+        }
+
+        public EdgeVertices(Vector3 corner1, Vector3 corner2, float outerStep) {
+            v1 = corner1;
+            v2 = Vector3.Lerp(corner1, corner2, outerStep);
+            v3 = Vector3.Lerp(corner1, corner2, 0.5f);
+            v4 = Vector3.Lerp(corner1, corner2, 1 - outerStep);
+            v5 = corner2;
         }
 
         public static EdgeVertices Lerp( EdgeVertices e1 , EdgeVertices e2 ,int step) {
             EdgeVertices edge ;
-            edge.v1 = HexMetrics.TerraceLerp( e1.v1,e2.v1,step );
-            edge.v2 = HexMetrics.TerraceLerp(e1.v2, e2.v2, step);
-            edge.v3 = HexMetrics.TerraceLerp(e1.v3, e2.v3, step);
-            edge.v4 = HexMetrics.TerraceLerp(e1.v4, e2.v4, step);
+            edge.v1 = HexMetrics.TerraceLerp( e1.v1 , e2.v1 , step ) ;
+            edge.v2 = HexMetrics.TerraceLerp( e1.v2 , e2.v2 , step ) ;
+            edge.v3 = HexMetrics.TerraceLerp( e1.v3 , e2.v3 , step ) ;
+            edge.v4 = HexMetrics.TerraceLerp( e1.v4 , e2.v4 , step ) ;
+            edge.v5 = HexMetrics.TerraceLerp( e1.v5 , e2.v5 , step ) ;
             return edge ;
         }
     }
@@ -95,8 +106,24 @@ public class HexMesh : MonoBehaviour {
             Vector3 v2 = center + HexMetrics.GetSecondSolidConrner( i ) ;
 
             EdgeVertices edge = new EdgeVertices( v1 , v2 ) ;
-            TriangulateEdgeFan( center , edge , cell.Color ) ;
-            
+
+            if ( cell.HasRiver ) {
+                if ( cell.HasRiverThroughEdge( i ) ) {
+                    edge.v3.y = cell.StreamBedHight ;
+                    if ( cell.HasRiverBeginOrEnd ) {
+                        TriangulateWithRiverBegubOrEnd( cell , i , center , edge ) ;
+                    }
+                    else {
+                        TriangulateWithRiver(cell, i, center, edge);
+                    }
+                }
+                else {
+                    TriangulateAdjacentToRiver( cell , i , center , edge ) ;
+                }
+            }
+            else {
+                TriangulateEdgeFan( center , edge , cell.Color ) ;
+            }
 
             //绘制外梯形，为了避免重复绘制，两个三角形只绘制一次
             if ( i == HexDirectionEnum.TopRight || i == HexDirectionEnum.Right || i == HexDirectionEnum.BottomRight ) {
@@ -108,6 +135,8 @@ public class HexMesh : MonoBehaviour {
         }
     }
 
+    
+
     private void TriangulateEdgeFan( Vector3 center , EdgeVertices edge , Color color ) {
         AddPerturTriangle(center, edge.v1, edge.v2);
         AddTriangleColor(color);
@@ -116,6 +145,9 @@ public class HexMesh : MonoBehaviour {
         AddTriangleColor(color);
 
         AddPerturTriangle(center, edge.v3, edge.v4);
+        AddTriangleColor(color);
+
+        AddPerturTriangle(center, edge.v4, edge.v5);
         AddTriangleColor(color);
     }
 
@@ -127,6 +159,9 @@ public class HexMesh : MonoBehaviour {
         AddQuadColor(c1, c2);
 
         AddQuad(edge1.v3, edge1.v4, edge2.v3, edge2.v4);
+        AddQuadColor(c1, c2);
+
+        AddQuad(edge1.v4, edge1.v5, edge2.v4, edge2.v5);
         AddQuadColor(c1, c2);
     }
 
@@ -140,7 +175,11 @@ public class HexMesh : MonoBehaviour {
         Vector3 bridge = HexMetrics.GetTwoBridge( direction ) ;
         bridge.y = neighbor.postion.y - cell.postion.y ;
 
-        EdgeVertices edge2 = new EdgeVertices(edge.v1 +bridge, edge.v4 + bridge);
+        EdgeVertices edge2 = new EdgeVertices(edge.v1 +bridge, edge.v5 + bridge);
+
+        if ( cell.HasRiverThroughEdge( direction ) ) {
+            edge2.v3.y = neighbor.StreamBedHight ;
+        }
 
         if ( cell.GetEdgeType( direction ) == HexEdgeType.Slope ) {
             TriangulateEdgeTerraces(edge , cell.Color, edge2, neighbor.Color) ;
@@ -154,22 +193,22 @@ public class HexMesh : MonoBehaviour {
         if ( nextNeighbor != null ) {
             //避免重复绘制，只绘制左上和上方的三角
             if ( direction != HexDirectionEnum.BottomRight ) {
-                Vector3 v5 = edge.v4 + HexMetrics.GetTwoBridge( direction.Next() ) ;
+                Vector3 v5 = edge.v5 + HexMetrics.GetTwoBridge( direction.Next() ) ;
                 v5.y = nextNeighbor.postion.y ;
 
                 if ( cell.Elevation <= neighbor.Elevation ) {
                     if ( cell.Elevation <= nextNeighbor.Elevation ) {
-                        TriangulateCorner(edge.v4, cell , edge2.v4, neighbor , v5 , nextNeighbor ) ;
+                        TriangulateCorner(edge.v5, cell , edge2.v5, neighbor , v5 , nextNeighbor ) ;
                     }
                     else {
-                        TriangulateCorner( v5 , nextNeighbor , edge.v4, cell , edge2.v4, neighbor ) ;
+                        TriangulateCorner( v5 , nextNeighbor , edge.v5, cell , edge2.v5, neighbor ) ;
                     }
                 }
                 else if ( neighbor.Elevation <= nextNeighbor.Elevation ) {
-                    TriangulateCorner(edge2.v4, neighbor , v5 , nextNeighbor , edge.v4, cell ) ;
+                    TriangulateCorner(edge2.v5, neighbor , v5 , nextNeighbor , edge.v5, cell ) ;
                 }
                 else {
-                    TriangulateCorner( v5 , nextNeighbor , edge.v4, cell , edge2.v4, neighbor ) ;
+                    TriangulateCorner( v5 , nextNeighbor , edge.v5, cell , edge2.v5, neighbor ) ;
                 }
             }
         }
@@ -181,7 +220,7 @@ public class HexMesh : MonoBehaviour {
 
             Vector3 v5 = cell.postion + HexMetrics.GetSecondConrner( direction ) ;
             v5.y = 0 ;
-            TriangulateCorner(edge.v4, cell , edge2.v4, neighbor , v5 , noneCell ) ;
+            TriangulateCorner(edge.v5, cell , edge2.v5, neighbor , v5 , noneCell ) ;
             DestroyObject(noneCell.gameObject);
         }
 
@@ -205,7 +244,7 @@ public class HexMesh : MonoBehaviour {
 
         Vector3 bridge = HexMetrics.GetOneBridge( direction ) ;
         Vector3 v3 = edge.v1 + bridge ;
-        Vector3 v4 = edge.v4 + bridge ;
+        Vector3 v4 = edge.v5 + bridge ;
         Vector3 v5 = center + HexMetrics.GetFirstCorner( direction ) ;
         Vector3 v6 = center + HexMetrics.GetSecondConrner( direction ) ;
 
@@ -377,9 +416,97 @@ public class HexMesh : MonoBehaviour {
 
     #endregion
 
+    #region  处理河流
+
+    /*
+     * e.v1 _________________ e.v5
+     *      \   |   |   |   /
+     *   m.v1\__|___|___|__/m.v5
+     *        \ |   |   | /
+     *         \|___|___|/
+     *         cL   c   cR
+     * e.v1 ~ e.v5 平均分成4分  每份是1/4
+     * m/e = 3/4,所以 m.v1 ~ m.v5 是1/6，1/4，1/4，1/6
+     */
+
+    /// <summary>
+    /// 河道三角化
+    /// </summary>
+    /// <param name="cell"></param>
+    /// <param name="direction"></param>
+    /// <param name="center"></param>
+    /// <param name="edge"></param>
+    private void TriangulateWithRiver(HexCell cell, HexDirectionEnum direction, Vector3 center, EdgeVertices edge) {
+        Vector3 centerL ;
+        Vector3 centerR ;
+        if ( cell.HasRiverThroughEdge( direction.Opposite() ) ) {
+            centerL = center + HexMetrics.GetFirstSolidCorner(direction.Previous()) * 1 / 4f;
+            centerR = center + HexMetrics.GetSecondSolidConrner(direction.Next()) * 1 / 4f;
+        }
+        else if ( cell.HasRiverThroughEdge( direction.Previous() ) ) {
+            centerL = Vector3.Lerp( center , edge.v1 , 2/3f ) ;
+            centerR = center ;
+        }
+        else if ( cell.HasRiverThroughEdge( direction.Next() ) ) {
+            centerL = center ;
+            centerR = Vector3.Lerp( center , edge.v5 , 2/3f ) ;
+        }
+        else if ( cell.HasRiverThroughEdge( direction.Next( 2 ) ) ) {
+            centerL = center ;
+            centerR = center + HexMetrics.GetSolidEdgeMiddle( direction.Next() ) * (0.5f * HexMetrics.innerToOuter) ;
+        }
+        else {
+            centerL = center + HexMetrics.GetSolidEdgeMiddle(direction.Previous()) * (0.5f * HexMetrics.innerToOuter);
+            centerR = center ;
+        }
+
+        center = Vector3.Lerp( centerL , centerR , 0.5f ) ;
+
+        EdgeVertices m = new EdgeVertices(Vector3.Lerp(centerL, edge.v1, 0.5f), Vector3.Lerp(centerR, edge.v5, 0.5f), 1 / 6f);
+        m.v3.y = center.y = edge.v3.y;
+        TriangulateEdgeStrip(m, cell.Color, edge, cell.Color);
+
+        AddTriangle(centerL, m.v1, m.v2);
+        AddTriangleColor(cell.Color);
+
+        AddQuad(centerL, center, m.v2, m.v3);
+        AddQuadColor(cell.Color);
+
+        AddQuad(center, centerR, m.v3, m.v4);
+        AddQuadColor(cell.Color);
+
+        AddTriangle(centerR, m.v4, m.v5);
+        AddTriangleColor(cell.Color);
+    }
+
+    private void TriangulateWithRiverBegubOrEnd(HexCell cell, HexDirectionEnum direction, Vector3 center, EdgeVertices edge) {
+
+        EdgeVertices m = new EdgeVertices(Vector3.Lerp(center, edge.v1, 0.5f), Vector3.Lerp(center, edge.v5, 0.5f));
+        m.v3.y = edge.v3.y;
+        TriangulateEdgeStrip(m, cell.Color, edge, cell.Color);
+        TriangulateEdgeFan( center,m,cell.Color );
+    }
+
+    private void TriangulateAdjacentToRiver( HexCell cell , HexDirectionEnum direction , Vector3 center , EdgeVertices edge ) {
+        if ( cell.HasRiverThroughEdge( direction.Next() ) ) {
+            if ( cell.HasRiverThroughEdge( direction.Previous() ) ) {
+                center += HexMetrics.GetSolidEdgeMiddle( direction ) * (HexMetrics.innerToOuter * 0.5f) ;
+            }
+            else if ( cell.HasRiverThroughEdge( direction.Previous( 2 ) ) ) {
+                center += HexMetrics.GetFirstSolidCorner( direction ) * 0.25f ;
+            }
+        }
+        else if ( cell.HasRiverThroughEdge( direction.Previous() ) && cell.HasRiverThroughEdge( direction.Next( 2 ) ) ) {
+            center += HexMetrics.GetSecondSolidConrner( direction ) * 0.25f ;
+        }
+        EdgeVertices m = new EdgeVertices( Vector3.Lerp( center , edge.v1 , 0.5f ) , Vector3.Lerp( center , edge.v5 , 0.5f ) ) ;
+        TriangulateEdgeStrip( m , cell.Color , edge , cell.Color ) ;
+        TriangulateEdgeFan( center , m , cell.Color ) ;
+    }
+
+    #endregion
 
     //添加内三角的三个标点和绘制顶点顺序？
-
     private void AddTriangle(Vector3 v1, Vector3 v2, Vector3 v3)
     {
         int vertexIndex = vertices.Count;
@@ -393,13 +520,6 @@ public class HexMesh : MonoBehaviour {
 
     private void AddPerturTriangle( Vector3 v1 , Vector3 v2 , Vector3 v3 ) {
         AddTriangle( Perturb( v1 ) , Perturb( v2 ) , Perturb( v3 ) ) ;
-        /*int vertexIndex = vertices.Count ;
-        vertices.Add( Perturb( v1 ) ) ;
-        vertices.Add( Perturb( v2 ) ) ;
-        vertices.Add( Perturb( v3 ) ) ;
-        triangles.Add( vertexIndex );
-        triangles.Add( vertexIndex + 1 );
-        triangles.Add( vertexIndex + 2 );*/
     }
 
 

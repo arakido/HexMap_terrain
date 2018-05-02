@@ -6,9 +6,11 @@ public class HexMetrics {
     public const int chunkSizeX = 5 ;   //六边形集的长
     public const int chunkSizeZ = 5 ;   //宽
 
+    public static float outerToInner = Mathf.Sin( 60 * Mathf.Deg2Rad ) ;
+    public static float innerToOuter = 1 / outerToInner ;
     public const float outerRadius = 10f; //六边型同心圆的半径
     //六边形边长
-    public static float innerRadius { get { return outerRadius * Mathf.Sin( 60 * Mathf.Deg2Rad ); } }
+    public static float innerRadius = outerRadius * outerToInner ;
 
     public const float solidFactor = 0.8f;     //内三角所占的比例
     public const float blendFactor = 1 - solidFactor;   //外梯形的比例
@@ -20,9 +22,11 @@ public class HexMetrics {
     public const int elevationDiffer = 1 ;  //采集点系数
 
     public static Texture2D noiseSource;    //噪声纹理
-    public const float cellPerturbStrength = 4f ;   //噪声干扰强度
+    public const float cellPerturbStrength = 0 ;//4f ;   //噪声干扰强度
     public const float noiseScale = 0.003f ;
     public const float elevationPerturbStrength = 1.5f ;    //y周方向的干扰范围
+
+    public const float streamBedElevationOffset = -1f ; //河流河床偏移高度量
 
     private static Vector3[] _corners ;
 
@@ -110,15 +114,20 @@ public class HexMetrics {
     }
 
     #region 噪声
+    
 
     public static Vector4 SampleNoise( Vector3 position ) {
         return noiseSource.GetPixelBilinear( position.x * noiseScale, position.z * noiseScale) ;
     }
 
+    public static Vector3 Perturb(Vector3 position)
+    {
+        return SampleNoisePerturb(position); ;
+    }
+
     public static Vector3 SampleNoisePerturb( Vector3 position ) {
         Vector4 sample = SampleNoise( position ) ;
         position.x += (sample.x * 2f - 1f) * cellPerturbStrength ;
-        //position.y += (sample.y * 2f - 1f) * cellPerturbStrength ;
         position.z += (sample.z * 2f - 1f) * cellPerturbStrength ;
 
         return position ;
@@ -126,6 +135,12 @@ public class HexMetrics {
 
 
     #endregion
+
+    public static Vector3 GetSolidEdgeMiddle( HexDirectionEnum direction ) {
+        HexDirectionEnum next = direction + 1 ;
+        if ( next >= HexDirectionEnum.Length ) next -= HexDirectionEnum.Length ;
+        return (corners[ (int) direction ] + corners[ (int)next]) * (0.5f * solidFactor) ;
+    }
 
 }
 
@@ -162,6 +177,13 @@ public enum HexEdgeType {
     Cliff,
 }
 
+//河流编辑模式
+public enum OptionalToggle {
+    Ignore,
+    Add,
+    Remove,
+}
+
 public static class HexDirectionExtensions {
 
     //对面三角
@@ -173,15 +195,29 @@ public static class HexDirectionExtensions {
 
     //上一个三角
     public static HexDirectionEnum Previous( this HexDirectionEnum direction ) {
-        direction -= 1 ;
-        if ( direction < 0 ) direction += (int) HexDirectionEnum.Length ;
-        return direction ;
+        /*direction -= 1 ;
+        if ( direction < 0 ) direction += (int) HexDirectionEnum.Length ;*/
+        return direction.Previous( 1 ) ;
+    }
+
+    public static HexDirectionEnum Previous(this HexDirectionEnum direction,int num)
+    {
+        direction -= num;
+        if (direction < 0) direction += (int)HexDirectionEnum.Length;
+        return direction;
     }
 
     //下一个三角
     public static HexDirectionEnum Next( this HexDirectionEnum direction ) {
-        direction += 1 ;
-        if ( direction >= HexDirectionEnum.Length ) direction -= (int) HexDirectionEnum.Length ;
-        return direction ;
+        /*direction += 1 ;
+        if ( direction >= HexDirectionEnum.Length ) direction -= (int) HexDirectionEnum.Length ;*/
+        return direction.Next( 1 ) ;
+    }
+
+    public static HexDirectionEnum Next(this HexDirectionEnum direction,int num)
+    {
+        direction += num;
+        if (direction >= HexDirectionEnum.Length) direction -= (int)HexDirectionEnum.Length;
+        return direction;
     }
 }
