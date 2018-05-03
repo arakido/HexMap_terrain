@@ -142,6 +142,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4cde3d01317575d4a8fe540cfb0d0f00, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  terrain: {fileID: 114139564102458934}
 --- !u!114 &114139564102458934
 MonoBehaviour:
   m_ObjectHideFlags: 1
