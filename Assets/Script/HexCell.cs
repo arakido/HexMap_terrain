@@ -48,6 +48,8 @@ public class HexCell : MonoBehaviour {
 
     public float StreamBedHight { get { return (Elevation + HexMetrics.streamBedElevationOffset) * HexMetrics.elevationStep ; } }
 
+    public float RiverSurfaceHight { get { return (Elevation + HexMetrics.riverSurfaceElevationOffest) * HexMetrics.elevationStep ;} }
+
     [HideInInspector] public Vector3 postion { get { return transform.localPosition; } }
 
     [SerializeField] private HexCell[] neighbors ;

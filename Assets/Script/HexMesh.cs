@@ -6,20 +6,21 @@ using System.Security.Cryptography.X509Certificates ;
 [RequireComponent(typeof(MeshFilter),typeof(MeshRenderer))]
 public class HexMesh : MonoBehaviour {
 
+    public bool useCollider ;
+    public bool useColors ;
+    public bool useUvCoordinates ;
+
     private Mesh hexMesh ;
     private MeshCollider meshCollider ;
     [System.NonSerialized] List<Vector3> vertices ;//顶点数组
     [System.NonSerialized] List<int> triangles;//三角形数组
-    [System.NonSerialized] List<Color> colors ; 
-
+    [System.NonSerialized] List<Color> colors ;
+    [System.NonSerialized] List<Vector2> uvs;   //uv
 
     private void Awake() {
         GetComponent<MeshFilter>().mesh = hexMesh = new Mesh() ;
-        meshCollider = gameObject.AddComponent<MeshCollider>() ;
+        if ( useCollider ) meshCollider = gameObject.AddComponent<MeshCollider>() ;
         hexMesh.name = "Hex Mesh" ;
-        /*vertices = new List<Vector3>() ;
-        triangles = new List<int>() ;
-        colors = new List<Color>() ;*/
     }
 
 	// Use this for initialization
@@ -36,7 +37,8 @@ public class HexMesh : MonoBehaviour {
         hexMesh.Clear();
         vertices = ListPool<Vector3>.Get() ;
         triangles = ListPool<int>.Get() ;
-        colors = ListPool<Color>.Get() ;
+        if ( useColors ) colors = ListPool<Color>.Get() ;
+        if ( useUvCoordinates ) uvs = ListPool<Vector2>.Get() ;
     }
 
     public void Apply() {
@@ -44,10 +46,16 @@ public class HexMesh : MonoBehaviour {
         ListPool<Vector3>.Add( vertices );
         hexMesh.SetTriangles( triangles , 0 ) ;
         ListPool<int>.Add( triangles );
-        hexMesh.SetColors( colors ) ;
-        ListPool<Color>.Add( colors );
+        if(useColors) {
+            hexMesh.SetColors(colors);
+            ListPool<Color>.Add(colors);
+        }
+        if ( useUvCoordinates ) {
+            hexMesh.SetUVs( 0,uvs );
+            ListPool<Vector2>.Add( uvs );
+        }
         hexMesh.RecalculateNormals();
-        meshCollider.sharedMesh = hexMesh;
+        if ( useCollider ) meshCollider.sharedMesh = hexMesh ;
     }
 
 
@@ -72,9 +80,17 @@ public class HexMesh : MonoBehaviour {
 
     //添加四边形梯形边的。。。
     public void AddQuad( Vector3 v1 , Vector3 v2 , Vector3 v3 , Vector3 v4 ) {
-
-        AddPerturTriangle(v1, v3,v2) ;
-        AddPerturTriangle(v2, v3,v4) ;
+        int vertexIndex = vertices.Count ;
+        vertices.Add( HexMetrics.Perturb( v1 ) ) ;
+        vertices.Add( HexMetrics.Perturb( v2 ) ) ;
+        vertices.Add( HexMetrics.Perturb( v3 ) ) ;
+        vertices.Add( HexMetrics.Perturb( v4 ) ) ;
+        triangles.Add( vertexIndex ) ;
+        triangles.Add( vertexIndex + 2 ) ;
+        triangles.Add( vertexIndex + 1 ) ;
+        triangles.Add( vertexIndex + 1 ) ;
+        triangles.Add( vertexIndex + 2 ) ;
+        triangles.Add( vertexIndex + 3 ) ;
     }
 
     public void AddTriangleColor(Color c1) {
@@ -94,17 +110,45 @@ public class HexMesh : MonoBehaviour {
     }
 
     public void AddQuadColor( Color c1 , Color c2  ) {
-        AddTriangleColor( c1 , c2 , c1 ) ;
-        AddTriangleColor( c1 , c2 , c2) ;
+        AddQuadColor( c1  , c1 , c2, c2) ;
     }
 
-    public void AddQuadColor(Color c1, Color c2,Color c3,Color c4)
-    {
-        AddTriangleColor(c1, c3, c2);
-        AddTriangleColor(c2, c3, c4);
+    public void AddQuadColor( Color c1 , Color c2 , Color c3 , Color c4 ) {
+        colors.Add( c1 ) ;
+        colors.Add( c2 ) ;
+        colors.Add( c3 ) ;
+        colors.Add( c4 ) ;
     }
 
-    
+    public void AddTriangleUV(Vector2 uv) {
+        AddTriangleUV( uv , uv , uv ) ;
+    }
+
+    public void AddTriangleUV( Vector2 uv1 , Vector2 uv2 , Vector2 uv3 ) {
+        uvs.Add( uv1 );
+        uvs.Add( uv2 );
+        uvs.Add( uv3 );
+        if (useUvCoordinates) Debug.Log("222");
+    }
+
+    public void AddQuadUV( Vector2 uv ) {
+        AddQuadUV( uv , uv , uv , uv ) ;
+    }
+
+    public void AddQuadUV(Vector2 uv1, Vector2 uv2, Vector2 uv3, Vector2 uv4) {
+        uvs.Add(uv1);
+        uvs.Add(uv2);
+        uvs.Add(uv3);
+        uvs.Add(uv4);
+        if (useUvCoordinates) Debug.Log("222");
+    }
+
+    public void AddQuadUV(float uMin, float uMax, float vMin, float vMax) {
+        AddQuadUV( new Vector2( uMin , vMin ) ,
+                   new Vector2( uMax , vMin ) ,
+                   new Vector2( uMin , vMax ) ,
+                   new Vector2( uMax , vMax ) ) ;
+    }
 }
 
 
