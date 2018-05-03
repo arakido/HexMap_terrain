@@ -138,14 +138,4 @@ public class HexGrid : MonoBehaviour {
         return cells[ x + z * cellCountX ];
     }
 
-
-    public void TouchCell( Vector3 position , Color color) {
-        position = transform.InverseTransformPoint( position ) ;
-        HexCoordinates coordinates = HexCoordinates.FromPositon( position );
-        int index = coordinates.X + coordinates.Z * cellCountX + coordinates.Z / 2 ;
-        HexCell cell = cells[ index ] ;
-        cell.Color = color;
-        hexMesh.Triangulate( cells );
-    }
-
 }

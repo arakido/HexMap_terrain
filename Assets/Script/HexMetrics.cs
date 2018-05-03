@@ -120,8 +120,7 @@ public class HexMetrics {
         return noiseSource.GetPixelBilinear( position.x * noiseScale, position.z * noiseScale) ;
     }
 
-    public static Vector3 Perturb(Vector3 position)
-    {
+    public static Vector3 Perturb(Vector3 position) {
         return SampleNoisePerturb(position); ;
     }
 
