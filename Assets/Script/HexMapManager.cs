@@ -15,6 +15,7 @@ public class HexMapManager : MonoBehaviour {
     private int brushSize;
 
     private OptionalToggle riverMode ;
+    private OptionalToggle roadMode ;
     private bool isDrag ;
     private HexDirectionEnum dragDirection ;
     private HexCell previousCell ;
@@ -78,7 +79,15 @@ public class HexMapManager : MonoBehaviour {
     }
 
     public void SetBrushSize( float size ) {
-        brushSize = Mathf.FloorToInt( size );
+        brushSize = Mathf.FloorToInt( size ) ;
+    }
+
+    public void SetRiverMode(int mode) {
+        riverMode = (OptionalToggle) mode ;
+    }
+
+    public void SetRroadMode( int mode ) {
+        roadMode = (OptionalToggle)mode ;
     }
 
     private void ValidateDrag( HexCell currentCell ) {
@@ -113,19 +122,17 @@ public class HexMapManager : MonoBehaviour {
         if ( cell == null ) return;
         if ( applyColor ) cell.Color = activeColor;
         if ( applyElevation ) cell.Elevation = activeElevation;
-        if ( riverMode == OptionalToggle.Remove ) {
-            cell.RemoveRiver();
-        }
-        else if( isDrag && riverMode == OptionalToggle.Add) {
+        if ( riverMode == OptionalToggle.Remove ) cell.RemoveRiver();
+        if ( roadMode == OptionalToggle.Remove ) cell.RemoveRoads() ;
+        if ( isDrag ) {
             HexCell otherCell = cell.GetNeighbor( dragDirection.Opposite() ) ;
             if ( otherCell != null ) {
-                previousCell.SetOutGoingRiver( dragDirection );
+                if ( riverMode == OptionalToggle.Add ) previousCell.SetOutGoingRiver( dragDirection ) ;
+                if ( roadMode == OptionalToggle.Add ) previousCell.AddRoad( dragDirection ) ;
             }
         }
     }
 
-    public void SetRiverMode( int mode ) {
-        riverMode = (OptionalToggle) mode ;
-    }
+    
 }
 

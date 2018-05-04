@@ -22,12 +22,12 @@ public class HexMetrics {
     public const int elevationDiffer = 1 ;  //采集点系数
 
     public static Texture2D noiseSource;    //噪声纹理
-    public const float cellPerturbStrength = 4f ;   //噪声干扰强度
+    public const float cellPerturbStrength =  4f ;   //噪声干扰强度
     public const float noiseScale = 0.003f ;
     public const float elevationPerturbStrength = 1.5f ;    //y周方向的干扰范围
 
-    public const float streamBedElevationOffset = -1f ; //河流河床偏移高度量
-    public const float riverSurfaceElevationOffest = -1.75f ;    //河水高度
+    public const float streamBedElevationOffset = -1.5f ; //河流河床偏移高度量
+    public const float riverSurfaceElevationOffest =  streamBedElevationOffset / 3f ;    //河水高度
 
     private static Vector3[] _corners ;
 

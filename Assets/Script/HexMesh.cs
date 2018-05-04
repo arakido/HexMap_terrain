@@ -174,7 +174,7 @@ public struct EdgeVertices
         v1 = corner1;
         v2 = Vector3.Lerp(corner1, corner2, outerStep);
         v3 = Vector3.Lerp(corner1, corner2, 0.5f);
-        v4 = Vector3.Lerp(corner1, corner2, 1 - outerStep);
+        v4 = Vector3.Lerp(corner1, corner2, 1f - outerStep);
         v5 = corner2;
     }
 

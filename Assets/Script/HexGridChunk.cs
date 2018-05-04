@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Networking ;
 
 public class HexGridChunk : MonoBehaviour {
 
@@ -9,6 +10,7 @@ public class HexGridChunk : MonoBehaviour {
 
     public HexMesh terrain ;
     public HexMesh rivers ;
+    public HexMesh roads;
 
 
     private void Awake() {
@@ -45,18 +47,20 @@ public class HexGridChunk : MonoBehaviour {
     public void AddCell( int index , HexCell cell ) {
         cell.chunk = this ;
         cells[ index ] = cell ;
-        cell.transform.SetParent( transform,false );
-        cell.uiRect.SetParent( gridCanvas.transform,false );
+        cell.transform.SetParent( terrain.transform , false ) ;
+        cell.uiRect.SetParent( gridCanvas.transform , false ) ;
     }
 
     private void Triangulate() {
         terrain.Clear() ;
         rivers.Clear();
+        roads.Clear() ;
         for ( int i = 0 ; i < cells.Length ; i++ ) {
             Triangulate( cells[ i ] ) ;
         }
         terrain.Apply() ;
         rivers.Apply();
+        roads.Apply() ;
     }
 
 
@@ -339,13 +343,20 @@ public class HexGridChunk : MonoBehaviour {
         }
     }
 
-
     //绘制绝壁三角
     private void TriangulateCornerTerracesCliff( Vector3 begin , HexCell beginCell , Vector3 left , HexCell leftCell , Vector3 right , HexCell rightCell ) {
 
         float b = Mathf.Abs( 1f / (rightCell.Elevation - beginCell.Elevation) ) ;
         Vector3 boundary = Vector3.Lerp( HexMetrics.Perturb( begin ) , HexMetrics.Perturb( right ) , b ) ;
         Color boundaryColor = Color.Lerp( beginCell.Color , rightCell.Color , b ) ;
+
+        TriangulateVertices vertices = new TriangulateVertices() ;
+        vertices.begin = begin ;
+        vertices.beginCell = beginCell ;
+        vertices.left = left ;
+        vertices.leftCell = leftCell ;
+        vertices.right = boundary ;
+        vertices.rightColor = boundaryColor ;
 
         TriangulateBoundaryTriangle( begin , beginCell , left , leftCell , boundary , boundaryColor ) ;
 
@@ -357,7 +368,6 @@ public class HexGridChunk : MonoBehaviour {
             terrain.AddTriangleColor( leftCell.Color , rightCell.Color , boundaryColor ) ;
         }
     }
-
 
     private void TriangulateCornerCliffTerraces( Vector3 begin , HexCell beginCell , Vector3 left , HexCell leftCell , Vector3 right , HexCell rightCell ) {
         float b = Mathf.Abs( 1f / (leftCell.Elevation - beginCell.Elevation) ) ;
@@ -445,7 +455,7 @@ public class HexGridChunk : MonoBehaviour {
         m.v3.y = center.y = edge.v3.y ;
         TriangulateEdgeStrip( m , cell.Color , edge , cell.Color ) ;
 
-        terrain.AddTriangle( centerL , m.v1 , m.v2 ) ;
+        terrain.AddPerturTriangle( centerL , m.v1 , m.v2 ) ;
         terrain.AddTriangleColor( cell.Color ) ;
 
         terrain.AddQuad( centerL , center , m.v2 , m.v3 ) ;
@@ -454,7 +464,7 @@ public class HexGridChunk : MonoBehaviour {
         terrain.AddQuad( center , centerR , m.v3 , m.v4 ) ;
         terrain.AddQuadColor( cell.Color ) ;
 
-        terrain.AddTriangle( centerR , m.v4 , m.v5 ) ;
+        terrain.AddPerturTriangle( centerR , m.v4 , m.v5 ) ;
         terrain.AddTriangleColor( cell.Color ) ;
 
         bool reversed = cell.InComingRive == direction ;
@@ -473,7 +483,7 @@ public class HexGridChunk : MonoBehaviour {
         TriangulateRiverQuad( m.v2 , m.v4 , edge.v2 , edge.v4 , cell.RiverSurfaceHight , 0.6f ,reversed );
 
         center.y = m.v2.y = m.v4.y = cell.RiverSurfaceHight ;
-        rivers.AddTriangle( center , m.v2 , m.v4 ) ;
+        rivers.AddPerturTriangle( center , m.v2 , m.v4 ) ;
         if ( reversed ) {
             rivers.AddTriangleUV( new Vector2( 0.5f , 0.4f ) , new Vector2( 1f , 0.2f ) , new Vector2( 0f , 0.2f ) ) ;
         }
@@ -514,4 +524,22 @@ public class HexGridChunk : MonoBehaviour {
     }
 
     #endregion
+
+    #region 处理道路
+
+
+
+    #endregion
+
+    public struct TriangulateVertices {
+        public Vector3 begin ;
+        public Color beginColor ;
+        public HexCell beginCell ;
+        public Vector3 left ;
+        public Color leftColor ;
+        public HexCell leftCell ;
+        public Vector3 right ;
+        public Color rightColor ;
+        public HexCell rightCell ;
+    }
 }
