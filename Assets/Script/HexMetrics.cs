@@ -70,15 +70,15 @@ public class HexMetrics {
     }
 
     //获取边的第二个(v4)坐标点
-    public static Vector3 GetSecondConrner( HexDirectionEnum direction) {
+    public static Vector3 GetSecondCorner( HexDirectionEnum direction) {
         direction += 1 ;
         if (direction >= HexDirectionEnum.Length ) direction -= corners.Length ;
         return GetFirstCorner(direction) ;
     }
 
     //获取边的内边第二个（v2）坐标点
-    public static Vector3 GetSecondSolidConrner( HexDirectionEnum direction) {
-        return GetSecondConrner(direction) * solidFactor ;
+    public static Vector3 GetSecondSolidCorner( HexDirectionEnum direction) {
+        return GetSecondCorner(direction) * solidFactor ;
     }
 
     //获取一个三角形的外梯形高度
@@ -88,7 +88,7 @@ public class HexMetrics {
 
     //两个梯形高度
     public static Vector3 GetTwoBridge( HexDirectionEnum direction ) {
-        return (GetFirstCorner( direction ) + GetSecondConrner( direction )) * blendFactor ;
+        return (GetFirstCorner( direction ) + GetSecondCorner( direction )) * blendFactor ;
     }
 
     public static Vector3 TerraceLerp( Vector3 a, Vector3 b, int step )

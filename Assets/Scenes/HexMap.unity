@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657844, g: 0.49641222, b: 0.57481694, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657868, g: 0.49641263, b: 0.57481706, a: 1}
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
@@ -1015,7 +1015,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 146993036}
   toggleTransition: 1
   graphic: {fileID: 1026522141}
-  m_Group: {fileID: 0}
+  m_Group: {fileID: 933755080}
   onValueChanged:
     m_PersistentCalls:
       m_Calls:
@@ -1175,7 +1175,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1312553891}
   toggleTransition: 1
   graphic: {fileID: 1866278746}
-  m_Group: {fileID: 0}
+  m_Group: {fileID: 933755080}
   onValueChanged:
     m_PersistentCalls:
       m_Calls:
@@ -1941,7 +1941,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1140596041}
   toggleTransition: 1
   graphic: {fileID: 20726054}
-  m_Group: {fileID: 0}
+  m_Group: {fileID: 933755080}
   onValueChanged:
     m_PersistentCalls:
       m_Calls:
@@ -2862,7 +2862,7 @@ MonoBehaviour:
   stickMinZoom: -250
   stickMaxZoom: -45
   swivelMinZoom: 90
-  swivelMaxZoom: 45
+  swivelMaxZoom: 90
   moveSpeedMinZoom: 400
   moveSpeedMaxZoom: 100
   rotationSpeed: 180
@@ -2955,7 +2955,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 76850810}
   toggleTransition: 1
   graphic: {fileID: 420323749}
-  m_Group: {fileID: 0}
+  m_Group: {fileID: 933755080}
   onValueChanged:
     m_PersistentCalls:
       m_Calls:
@@ -3929,7 +3929,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 117653740}
   toggleTransition: 1
   graphic: {fileID: 615937824}
-  m_Group: {fileID: 0}
+  m_Group: {fileID: 933755080}
   onValueChanged:
     m_PersistentCalls:
       m_Calls:
@@ -6195,7 +6195,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1059638746}
   toggleTransition: 1
   graphic: {fileID: 733199940}
-  m_Group: {fileID: 0}
+  m_Group: {fileID: 933755080}
   onValueChanged:
     m_PersistentCalls:
       m_Calls:
@@ -6746,12 +6746,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f5f1302e2ddf5894ab6307ba36e7b204, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uiRect: {fileID: 0}
-  coordinates:
-    pointX: 0
-    pointY: 0
-    pointZ: 0
-  chunk: {fileID: 0}
   neighbors:
   - {fileID: 0}
   - {fileID: 0}
@@ -6759,6 +6753,12 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  uiRect: {fileID: 0}
+  coordinates:
+    pointX: 0
+    pointY: 0
+    pointZ: 0
+  chunk: {fileID: 0}
 --- !u!4 &2133443547
 Transform:
   m_ObjectHideFlags: 0

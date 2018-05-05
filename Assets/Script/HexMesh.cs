@@ -110,7 +110,7 @@ public class HexMesh : MonoBehaviour {
     }
 
     public void AddQuadColor( Color c1 , Color c2  ) {
-        AddQuadColor( c1  , c1 , c2, c2) ;
+        AddQuadColor( c1, c1, c2, c2 );
     }
 
     public void AddQuadColor( Color c1 , Color c2 , Color c3 , Color c4 ) {
@@ -128,7 +128,6 @@ public class HexMesh : MonoBehaviour {
         uvs.Add( uv1 );
         uvs.Add( uv2 );
         uvs.Add( uv3 );
-        if (useUvCoordinates) Debug.Log("222");
     }
 
     public void AddQuadUV( Vector2 uv ) {
@@ -140,7 +139,6 @@ public class HexMesh : MonoBehaviour {
         uvs.Add(uv2);
         uvs.Add(uv3);
         uvs.Add(uv4);
-        if (useUvCoordinates) Debug.Log("222");
     }
 
     public void AddQuadUV(float uMin, float uMax, float vMin, float vMax) {

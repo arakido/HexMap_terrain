@@ -112,6 +112,8 @@ public class HexCell : MonoBehaviour {
     //是否是河流的一端
     public bool HasRiverBeginOrEnd { get { return hasIncomingRiver != hasOutgoingRive; } }
 
+    public HexDirectionEnum RiverBeginOrEndDirection { get { return HasInComingRiver ? InComingRive : OutGoingRive; } }
+
     //河床高度
     public float StreamBedHight { get { return (Elevation + HexMetrics.streamBedElevationOffset) * HexMetrics.elevationStep; } }
 
@@ -230,13 +232,13 @@ public class HexCell : MonoBehaviour {
     }
 
     private void SetRoad( int index , bool state ) {
-        SetRoadSelfOnly( index , state ) ;
-        neighbors[ index ].SetRoadSelfOnly( index , state ) ;
+        /*SetRoadSelfOnly( index , state ) ;
+        neighbors[ index ].SetRoadSelfOnly( index , state ) ;*/
 
-        /*roads[index] = state;
+        roads[index] = state;
         neighbors[index].roads[(int)((HexDirectionEnum)(index)).Opposite()] = state;
         neighbors[index].RefreshSelfOnly();
-        RefreshSelfOnly();*/
+        RefreshSelfOnly();
     }
 
     public void SetRoadSelfOnly( int index , bool state ) {
