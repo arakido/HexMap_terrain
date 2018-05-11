@@ -1,4 +1,4 @@
-﻿Shader "Custom/River" {
+﻿Shader "Custom/Water" {
 	Properties {
 		_Color ("Color", Color) = (1,1,1,1)
 		_MainTex ("Albedo (RGB)", 2D) = "white" {}
@@ -6,21 +6,22 @@
 		_Metallic ("Metallic", Range(0,1)) = 0.0
 	}
 	SubShader {
-		Tags { "RenderType"="Transparent" "Queue" = "Transparent+1" }
+		Tags { "RenderType"="Opaque" "Queue" = "Geometry+1" }
 		LOD 200
 
 		CGPROGRAM
 		// Physically based Standard lighting model, and enable shadows on all light types
-		#pragma surface surf Standard alpha //fullforwardshadows
+		#pragma surface surf Standard alpha
 
 		// Use shader model 3.0 target, to get nicer looking lighting
 		#pragma target 3.0
+		#include "Water.cginc"
 
 		sampler2D _MainTex;
 
 		struct Input {
 			float2 uv_MainTex;
-			float4 color : COLOR;
+			float3 worldPos;
 		};
 
 		half _Glossiness;
@@ -34,25 +35,17 @@
 			// put more per-instance properties here
 		UNITY_INSTANCING_BUFFER_END(Props)
 
+		void surf (Input IN, inout SurfaceOutputStandard o) {
+			// Albedo comes from a texture tinted by color
+			float waves = Waves(IN.worldPos.xz, _MainTex);
 
-		void surf(Input IN, inout SurfaceOutputStandard o) {
-			float2 uv = IN.uv_MainTex;
-			uv.x *= 0.0625 + _Time.y * 0.005;
-			uv.y -= _Time.y * 0.1;
-			float4 noise = tex2D(_MainTex, uv);
-
-			float2 uv2 = IN.uv_MainTex;
-			uv2.x = uv2.x * 0.0625 - _Time.y * 0.0052;
-			uv2.y -= _Time.y * 0.08;
-			float4 noise2 = tex2D(_MainTex, uv);
-
-			fixed4 c = saturate(_Color + noise.r * noise2.a);
+			fixed4 c = saturate(_Color + waves);
 			o.Albedo = c.rgb;
+			// Metallic and smoothness come from slider variables
 			o.Metallic = _Metallic;
 			o.Smoothness = _Glossiness;
 			o.Alpha = c.a;
 		}
-
 		ENDCG
 	}
 	FallBack "Diffuse"

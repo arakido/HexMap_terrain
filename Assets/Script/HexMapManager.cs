@@ -8,11 +8,13 @@ public class HexMapManager : MonoBehaviour {
 
     private Color[] colors ;
     private Color activeColor ;
-    private int activeElevation;
-
-    private bool applyColor = false;
-    private bool applyElevation;
     private int brushSize;
+    private int activeElevation;
+    private int activeWaterLevel ;
+
+    private bool applyColor ;
+    private bool applyElevation;
+    private bool applyWaterLevel ;
 
     private OptionalToggle riverMode ;
     private OptionalToggle roadMode ;
@@ -90,6 +92,14 @@ public class HexMapManager : MonoBehaviour {
         roadMode = (OptionalToggle)mode ;
     }
 
+    public void SetAppWaterLevel( bool toggle ) {
+        applyWaterLevel = toggle ;
+    }
+
+    public void SetWaterLevel( float level ) {
+        activeWaterLevel = Mathf.FloorToInt( level ) ;
+    }
+
     private void ValidateDrag( HexCell currentCell ) {
         for (HexDirectionEnum i = 0 ; i < HexDirectionEnum.Length ; i++ ) {
             if ( previousCell.GetNeighbor( i ) == currentCell ) {
@@ -122,6 +132,7 @@ public class HexMapManager : MonoBehaviour {
         if ( cell == null ) return;
         if ( applyColor ) cell.Color = activeColor;
         if ( applyElevation ) cell.Elevation = activeElevation;
+        if ( applyWaterLevel ) cell.WaterLevel = activeWaterLevel ;
         if ( riverMode == OptionalToggle.Remove ) cell.RemoveRiver();
         if ( roadMode == OptionalToggle.Remove ) cell.RemoveRoads() ;
         if ( isDrag ) {

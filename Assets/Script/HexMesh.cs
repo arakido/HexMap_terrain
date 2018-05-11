@@ -81,16 +81,21 @@ public class HexMesh : MonoBehaviour {
     //添加四边形梯形边的。。。
     public void AddQuad( Vector3 v1 , Vector3 v2 , Vector3 v3 , Vector3 v4 ) {
         int vertexIndex = vertices.Count ;
-        vertices.Add( HexMetrics.Perturb( v1 ) ) ;
-        vertices.Add( HexMetrics.Perturb( v2 ) ) ;
-        vertices.Add( HexMetrics.Perturb( v3 ) ) ;
-        vertices.Add( HexMetrics.Perturb( v4 ) ) ;
+        vertices.Add( v1 ) ;
+        vertices.Add( v2 ) ;
+        vertices.Add( v3 ) ;
+        vertices.Add( v4 ) ;
         triangles.Add( vertexIndex ) ;
         triangles.Add( vertexIndex + 2 ) ;
         triangles.Add( vertexIndex + 1 ) ;
         triangles.Add( vertexIndex + 1 ) ;
         triangles.Add( vertexIndex + 2 ) ;
         triangles.Add( vertexIndex + 3 ) ;
+    }
+
+    public void AddPerturQuad( Vector3 v1 , Vector3 v2 , Vector3 v3 , Vector3 v4 ) {
+        AddQuad( HexMetrics.Perturb( v1 ) , HexMetrics.Perturb( v2 ) , HexMetrics.Perturb( v3 ) ,
+                 HexMetrics.Perturb( v4 ) ) ;
     }
 
     public void AddTriangleColor(Color c1) {

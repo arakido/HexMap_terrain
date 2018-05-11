@@ -93,24 +93,20 @@ public class HexCell : MonoBehaviour {
     }
 
     #region 河流
-
-    public bool HasInComingRiver { get { return hasIncomingRiver; } private set { hasIncomingRiver = value; } }
-    private bool hasIncomingRiver; //河源
-
-    public bool HasOutGoingRive { get { return hasOutgoingRive; } private set { hasOutgoingRive = value; } }
-    private bool hasOutgoingRive;  //河口
-
-    public HexDirectionEnum InComingRive { get { return incomingRive; } private set { incomingRive = value; } }
-    private HexDirectionEnum incomingRive; //流入方向
-
-    public HexDirectionEnum OutGoingRive { get { return outgoingRive; } private set { outgoingRive = value; } }
-    private HexDirectionEnum outgoingRive; //流出方向
+    //河源
+    public bool HasInComingRiver { get ; private set ; }
+    //河尾
+    public bool HasOutGoingRive { get ; private set ; }
+    //流入方向
+    public HexDirectionEnum InComingRive { get ; private set ; }
+    //流出方向
+    public HexDirectionEnum OutGoingRive { get ; private set ; }
 
     //是否有河流
     public bool HasRiver { get { return HasInComingRiver || HasOutGoingRive; } }
 
     //是否是河流的一端
-    public bool HasRiverBeginOrEnd { get { return hasIncomingRiver != hasOutgoingRive; } }
+    public bool HasRiverBeginOrEnd { get { return HasInComingRiver != HasOutGoingRive; } }
 
     public HexDirectionEnum RiverBeginOrEndDirection { get { return HasInComingRiver ? InComingRive : OutGoingRive; } }
 
@@ -118,7 +114,7 @@ public class HexCell : MonoBehaviour {
     public float StreamBedHight { get { return (Elevation + HexMetrics.streamBedElevationOffset) * HexMetrics.elevationStep; } }
 
     //河水高度
-    public float RiverSurfaceHight { get { return (Elevation + HexMetrics.riverSurfaceElevationOffest) * HexMetrics.elevationStep; } }
+    public float RiverSurfaceHight { get { return (Elevation + HexMetrics.waterElevationOffest) * HexMetrics.elevationStep; } }
 
     public void RefreshRiver() {
         if ( HasOutGoingRive && Elevation < GetNeighbor( OutGoingRive ).Elevation ) {
@@ -252,6 +248,24 @@ public class HexCell : MonoBehaviour {
         int difference = Elevation - GetNeighbor( direction ).Elevation ;
         return Mathf.Abs( difference ) ;
     }
+
+    #endregion
+
+    #region 水平面
+
+    public int WaterLevel {
+        get { return _waterLevel; }
+        set {
+            if ( _waterLevel == value ) return ;
+            _waterLevel = value ;
+            Refresh();
+        }
+    }
+    private int _waterLevel ;
+
+    public bool IsUnderWater { get { return WaterLevel > Elevation ; } }
+
+    public float WaterSurfaceHight { get { return (WaterLevel + HexMetrics.waterElevationOffest) * HexMetrics.elevationStep ; } }
 
     #endregion
 }
