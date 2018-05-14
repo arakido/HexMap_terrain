@@ -13,6 +13,7 @@ public class HexGridChunk : MonoBehaviour {
     public HexMesh roads;
     public HexMesh water ;
     public HexMesh waterShore ;
+    public HexMesh estuaries;
 
     private void Awake() {
         gridCanvas = GetComponentInChildren<Canvas>() ;
@@ -58,6 +59,7 @@ public class HexGridChunk : MonoBehaviour {
         roads.Clear() ;
         water.Clear();
         waterShore.Clear();
+        estuaries.Clear();
         for ( int i = 0 ; i < cells.Length ; i++ ) {
             Triangulate( cells[ i ] ) ;
         }
@@ -66,6 +68,7 @@ public class HexGridChunk : MonoBehaviour {
         roads.Apply() ;
         water.Apply() ;
         waterShore.Apply();
+        estuaries.Apply();
     }
 
     #region 绘制六边形
@@ -813,7 +816,7 @@ public class HexGridChunk : MonoBehaviour {
         EdgeVertices e2 = new EdgeVertices( center2 + HexMetrics.GetSecondSolidCorner( direction.Opposite() ) ,
                                             center2 + HexMetrics.GetFirstSolidCorner( direction.Opposite() ) ) ;
         if ( cell.HasRiverThroughEdge( direction ) ) {
-            TriangulateEstuary( e1 , e2 ) ;
+            TriangulateEstuary( e1 , e2 ,cell.InComingRive == direction) ;
         }
         else {
             AddWaterShoreQuad(e1.v1, e1.v2, e2.v1, e2.v2);
@@ -857,12 +860,33 @@ public class HexGridChunk : MonoBehaviour {
         AddRiverQuadUV( 0f , 1f , 0.8f , 1f ) ;
     }
 
-    private void TriangulateEstuary( EdgeVertices e1 , EdgeVertices e2 ) {
-        AddWaterShoreTriangle( e2.v1 , e1.v2 , e1.v1 ) ;
-        AddWaterShoreTriangle( e2.v5 , e1.v5 , e1.v1 ) ;
-        AddWaterShoreTriangleUV( new Vector2(0f,1f), new Vector2(0f, 0f), new Vector2(0f, 0f) );
-        AddWaterShoreTriangleUV( new Vector2(0f,1f), new Vector2(0f, 0f), new Vector2(0f, 0f) );
+    //河口
+    private void TriangulateEstuary( EdgeVertices e1 , EdgeVertices e2, bool incomingRive ) {
+        AddWaterShoreTriangle( e2.v1, e1.v2, e1.v1 );
+        AddWaterShoreTriangle( e2.v5, e1.v5, e1.v4 );
+        AddWaterShoreTriangleUV( new Vector2( 0f, 1f ), new Vector2( 0f, 0f ), new Vector2( 0f, 0f ) );
+        AddWaterShoreTriangleUV( new Vector2( 0f, 1f ), new Vector2( 0f, 0f ), new Vector2( 0f, 0f ) );
+
+        AddEstuaryQuad( e2.v1, e1.v2, e2.v2, e1.v3 );
+        AddEstuaryTriangle( e1.v3 , e2.v2 , e2.v4 ) ;
+        AddEstuaryQuad( e1.v3, e1.v4, e2.v4, e2.v5 );
+
+        AddEstuaryQuadUV( new Vector2( 0f, 1f ), new Vector2( 0f, 0f ), new Vector2( 1f, 1f ), new Vector2( 0f, 0f ) );
+        AddEstuaryTriangleUV( new Vector2( 0f, 0f ), new Vector2( 1f, 1f ), new Vector2( 1f, 1f ) );
+        AddEstuaryQuadUV( new Vector2( 0f, 0f ), new Vector2( 0f, 0f ), new Vector2( 1f, 1f ), new Vector2( 0f, 1f ) );
+
+        if ( incomingRive ) {
+            AddEstuaryQuadUV2( new Vector2( 1.5f, 1f ), new Vector2( 0.7f, 1.15f ), new Vector2( 1f, 0.8f ), new Vector2( 0.5f, 1.1f ) );
+            AddEstuaryTriangleUV2( new Vector2(0.5f,1.1f), new Vector2(1f, 0.8f), new Vector2(0f, 0.8f) );
+            AddEstuaryQuadUV2( new Vector2( 0.5f, 1.1f ), new Vector2( 0.3f, 1.15f ), new Vector2( 0f, 0.8f ), new Vector2( -0.5f, 1f ) );
+        }
+        else {
+            AddEstuaryQuadUV2( new Vector2( -0.5f , -0.2f ) , new Vector2( 0.3f , -0.35f ) , new Vector2( 0f , 0f ) , new Vector2( 0.5f , -0.3f ) );
+            AddEstuaryTriangleUV2( new Vector2( 0.5f , -0.3f ) , new Vector2( 0f , 0f ) , new Vector2( 1f , 0f ) );
+            AddEstuaryQuadUV2( new Vector2( 0.5f , -0.3f ) , new Vector2( 0.7f , -0.35f ) , new Vector2( 1f , 0f ) , new Vector2( 1.5f , -0.2f ) );
+        }
     }
+
 
     private void AddWaterTriangle( Vector3 v1 , Vector3 v2 , Vector3 v3 ) {
         water.AddPerturTriangle( v1 , v2 , v3 ) ;
@@ -886,6 +910,30 @@ public class HexGridChunk : MonoBehaviour {
 
     private void AddWaterShoreQuadUV(float uMin, float uMax, float vMin, float vMax) {
         waterShore.AddQuadUV(uMin, uMax, vMin, vMax);
+    }
+
+    private void AddEstuaryTriangle( Vector3 v1, Vector3 v2, Vector3 v3 ) {
+        estuaries.AddPerturTriangle( v1, v2, v3 );
+    }
+
+    private void AddEstuaryTriangleUV( Vector2 uv1, Vector2 uv2, Vector2 uv3 ) {
+        estuaries.AddTriangleUV( uv1, uv2, uv3 );
+    }
+
+    private void AddEstuaryTriangleUV2( Vector2 uv1, Vector2 uv2, Vector2 uv3 ) {
+        estuaries.AddTriangleUV2( uv1, uv2, uv3 );
+    }
+
+    private void AddEstuaryQuad( Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4 ) {
+        estuaries.AddPerturQuad( v1, v2, v3, v4 );
+    }
+
+    private void AddEstuaryQuadUV( Vector2 uv1, Vector2 uv2, Vector2 uv3, Vector2 uv4 ) {
+        estuaries.AddQuadUV( uv1, uv2, uv3, uv4 );
+    }
+    
+    private void AddEstuaryQuadUV2( Vector2 uv1, Vector2 uv2, Vector2 uv3, Vector2 uv4 ) {
+        estuaries.AddQuadUV2( uv1, uv2, uv3, uv4 );
     }
 
     #endregion

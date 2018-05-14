@@ -116,13 +116,9 @@ public class HexCell : MonoBehaviour {
     //河水高度
     public float RiverSurfaceHight { get { return (Elevation + HexMetrics.waterElevationOffest) * HexMetrics.elevationStep; } }
 
+
     public void RefreshRiver() {
-        if ( HasOutGoingRive && Elevation < GetNeighbor( OutGoingRive ).Elevation ) {
-            RemoveOutGoingRiver();
-        }
-        if ( HasInComingRiver && Elevation > GetNeighbor( InComingRive ).Elevation ) {
-            RemoveInComingRiver();
-        }
+        ValidateRivers();
     }
 
     /// <summary>
@@ -141,10 +137,10 @@ public class HexCell : MonoBehaviour {
     }
 
     public void SetOutGoingRiver( HexDirectionEnum direction ) {
+        if ( IsUnderWater ) return;
         if ( HasOutGoingRive && OutGoingRive == direction ) return ;
         HexCell neighbor = GetNeighbor( direction ) ;
-        if ( neighbor == null || Elevation < neighbor.Elevation ) return ;
-
+        if ( !IsValidRiverDestination( neighbor ) ) return;
         RemoveOutGoingRiver();
         if ( HasInComingRiver && InComingRive == direction ) {
             RemoveInComingRiver();
@@ -157,6 +153,21 @@ public class HexCell : MonoBehaviour {
 
         SetRoad( (int) direction , false ) ;
     }
+
+    private bool IsValidRiverDestination( HexCell neighbor ) {
+        return neighbor && ( Elevation >= neighbor.Elevation || WaterLevel == neighbor.Elevation );
+    }
+
+    private void ValidateRivers( ) {
+        if ( HasOutGoingRive && !IsValidRiverDestination( GetNeighbor( OutGoingRive ) ) ) {
+            RemoveOutGoingRiver(  );
+        }
+
+        if ( HasInComingRiver && !GetNeighbor( InComingRive ).IsValidRiverDestination( this ) ) {
+            RemoveInComingRiver(  );
+        }
+    }
+
 
     //移除河流
     public void RemoveRiver() {
@@ -258,6 +269,7 @@ public class HexCell : MonoBehaviour {
         set {
             if ( _waterLevel == value ) return ;
             _waterLevel = value ;
+            ValidateRivers();
             Refresh();
         }
     }

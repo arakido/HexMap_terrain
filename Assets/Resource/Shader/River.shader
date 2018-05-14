@@ -6,7 +6,7 @@
 		_Metallic ("Metallic", Range(0,1)) = 0.0
 	}
 	SubShader {
-		Tags { "RenderType"="Transparent" "Queue" = "Transparent+1" }
+		Tags { "RenderType"="Transparent" "Queue" = "Transparent" }
 		LOD 200
 
 		CGPROGRAM
@@ -15,6 +15,7 @@
 
 		// Use shader model 3.0 target, to get nicer looking lighting
 		#pragma target 3.0
+		#include "Water.cginc"
 
 		sampler2D _MainTex;
 
@@ -36,17 +37,9 @@
 
 
 		void surf(Input IN, inout SurfaceOutputStandard o) {
-			float2 uv = IN.uv_MainTex;
-			uv.x *= 0.0625 + _Time.y * 0.005;
-			uv.y -= _Time.y * 0.1;
-			float4 noise = tex2D(_MainTex, uv);
+			float river = River(IN.uv_MainTex, _MainTex);
 
-			float2 uv2 = IN.uv_MainTex;
-			uv2.x = uv2.x * 0.0625 - _Time.y * 0.0052;
-			uv2.y -= _Time.y * 0.08;
-			float4 noise2 = tex2D(_MainTex, uv);
-
-			fixed4 c = saturate(_Color + noise.r * noise2.a);
+			fixed4 c = saturate(_Color + river);
 			o.Albedo = c.rgb;
 			o.Metallic = _Metallic;
 			o.Smoothness = _Glossiness;
