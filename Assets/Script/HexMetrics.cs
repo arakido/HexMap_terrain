@@ -32,6 +32,9 @@ public class HexMetrics {
     public const float waterFactor = 0.6f; //水内三角的比例
     public const float waterBlendFactor = 1 - waterFactor; //水内三角的比例
 
+    public const int hashGridSize = 256 ; //散列网格数
+    private static HexHash[] hashGrid;//散列网格
+
     private static Vector3[] _corners ;
 
     public static Vector3[] corners {
@@ -159,6 +162,48 @@ public class HexMetrics {
 
     public static Vector3 GetWaterBridge(HexDirectionEnum direction) {
         return (GetFirstCorner(direction) + GetSecondCorner(direction)) * waterBlendFactor;
+    }
+
+    #endregion
+
+    #region 城市
+
+    public static void InitTialzeHashGrid() {
+        hashGrid = new HexHash[hashGridSize * hashGridSize] ;
+        for ( int i = 0 ; i < hashGrid.Length ; i++ ) {
+            hashGrid[ i ] = new HexHash() ;
+        }
+    }
+
+    public static void InitTialzeHashGrid( int seed ) {
+        hashGrid = new HexHash[hashGridSize * hashGridSize] ;
+        Random.State currentState = Random.state ;
+        Random.InitState( seed ) ;
+        for ( int i = 0 ; i < hashGrid.Length ; i++ ) {
+            hashGrid[ i ] = new HexHash() ;
+        }
+        Random.state = currentState ;
+    }
+
+    public static HexHash SampleHashGrid( Vector3 position ) {
+        int x = (int) position.x % hashGridSize ;
+        if ( x < 0 ) x += hashGridSize ;
+        int z = (int) position.z % hashGridSize ;
+        if ( z < 0 ) z += hashGridSize ;
+        return hashGrid[ x + z * hashGridSize ] ;
+    }
+
+    public static int GetFeatureRandomLevel( int level ,float hash) {
+        int rand = Random.Range( 1 , 101 ) ;
+        int weight = 0 ;
+        for ( int i = 0 ; i < level ; i++ ) {
+            weight += Random.Range( 1 , (100 - weight) / (level - i) ) ;
+            if ( rand <= weight ) {
+                if ( hash < weight ) return i ;
+                return -1 ;
+            }
+        }
+        return level -1 ;
     }
 
     #endregion

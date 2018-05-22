@@ -280,4 +280,20 @@ public class HexCell : MonoBehaviour {
     public float WaterSurfaceHight { get { return (WaterLevel + HexMetrics.waterElevationOffest) * HexMetrics.elevationStep ; } }
 
     #endregion
+
+    #region 城市
+
+    public int UrbanLevel {
+        get { return urbanLevel ; }
+        set {
+            if ( urbanLevel != value ) {
+                urbanLevel = value ;
+                RefreshSelfOnly();
+            }
+        }        
+    }
+    private int urbanLevel ;
+
+    #endregion
+
 }

@@ -15,6 +15,8 @@ public class HexGridChunk : MonoBehaviour {
     public HexMesh waterShore ;
     public HexMesh estuaries;
 
+    public HexFeatureManager feature ;
+
     private void Awake() {
         gridCanvas = GetComponentInChildren<Canvas>() ;
         //terrain = GetComponentInChildren<HexMesh>() ;
@@ -60,6 +62,7 @@ public class HexGridChunk : MonoBehaviour {
         water.Clear();
         waterShore.Clear();
         estuaries.Clear();
+        feature.Clear();
         for ( int i = 0 ; i < cells.Length ; i++ ) {
             Triangulate( cells[ i ] ) ;
         }
@@ -69,6 +72,7 @@ public class HexGridChunk : MonoBehaviour {
         water.Apply() ;
         waterShore.Apply();
         estuaries.Apply();
+        feature.Apply();
     }
 
     #region 绘制六边形
@@ -112,10 +116,16 @@ public class HexGridChunk : MonoBehaviour {
                 }
                 else {
                     TriangulateAdjacentToRiver( cell , i , center , edge ) ;
+                    if ( !cell.IsUnderWater && !cell.HasRoadThroughEdge( i ) ) {
+                        feature.AddFeature(cell, (center + edge.v1 + edge.v5) * (1 / 3f));
+                    }
                 }
             }
             else {
                 TriangulateWithoutRiver( cell ,i , center,edge );
+                if ( !cell.IsUnderWater && !cell.HasRoadThroughEdge( i ) ) {
+                    feature.AddFeature(cell, (center + edge.v1 + edge.v5) * (1 / 3f) ) ;
+                }
             }
 
             //绘制外梯形，为了避免重复绘制，两个三角形只绘制一次
@@ -129,6 +139,9 @@ public class HexGridChunk : MonoBehaviour {
             if ( cell.IsUnderWater ) {
                 TriangulateWater( i , cell , center ) ;
             }
+        }
+        if(!cell.IsUnderWater && !cell.HasRiver && !cell.HasRoads) {
+            feature.AddFeature( cell , cell.postion ) ;
         }
     }
 

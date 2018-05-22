@@ -12,6 +12,8 @@ public class HexGrid : MonoBehaviour {
     public Text cellLabelPrefab ;
     public Texture2D noiseSource ;
 
+    public int hashSeed ;
+
     private int cellCountX ;
     private int cellCountZ ;
 
@@ -24,6 +26,7 @@ public class HexGrid : MonoBehaviour {
 
     private void Awake() {
         HexMetrics.noiseSource = noiseSource ;
+        HexMetrics.InitTialzeHashGrid( hashSeed ) ;
 
         cellCountX = chunkCountX * HexMetrics.chunkSizeX ;
         cellCountZ = chunkCountZ * HexMetrics.chunkSizeZ ;
@@ -33,7 +36,10 @@ public class HexGrid : MonoBehaviour {
     }
 
     private void OnEnable() {
-        HexMetrics.noiseSource = noiseSource ;
+        if ( !HexMetrics.noiseSource ) {
+            HexMetrics.noiseSource = noiseSource ;
+            HexMetrics.InitTialzeHashGrid(hashSeed);
+        }
     }
 
     // Use this for initialization

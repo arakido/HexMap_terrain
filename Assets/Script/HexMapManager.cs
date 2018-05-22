@@ -11,10 +11,12 @@ public class HexMapManager : MonoBehaviour {
     private int brushSize;
     private int activeElevation;
     private int activeWaterLevel ;
+    private int activeUrbanlevel ;
 
     private bool applyColor ;
     private bool applyElevation;
     private bool applyWaterLevel ;
+    private bool applyUrbanLevel ;
 
     private OptionalToggle riverMode ;
     private OptionalToggle roadMode ;
@@ -41,11 +43,10 @@ public class HexMapManager : MonoBehaviour {
         }
     }
 
-    private void HandleInput()
-    {
-        Ray inputRay = Camera.main.ScreenPointToRay(Input.mousePosition);
-        RaycastHit hit;
-        if (Physics.Raycast(inputRay, out hit)) {
+    private void HandleInput() {
+        Ray inputRay = Camera.main.ScreenPointToRay( Input.mousePosition ) ;
+        RaycastHit hit ;
+        if ( Physics.Raycast( inputRay , out hit ) ) {
             //hexGrid.TouchCell( hit.point , activeColor ) ;
             HexCell currentCell = hexGrid.GetCell( hit.point ) ;
             if ( previousCell && previousCell != currentCell ) {
@@ -54,12 +55,57 @@ public class HexMapManager : MonoBehaviour {
             else {
                 isDrag = false ;
             }
-            if ( brushSize > 0 ) EditCells(currentCell);
-            else EditCell(currentCell);
+            if ( brushSize > 0 ) EditCells( currentCell ) ;
+            else EditCell( currentCell ) ;
             previousCell = currentCell ;
         }
         else {
             previousCell = null ;
+        }
+    }
+
+    private void ValidateDrag( HexCell currentCell ) {
+        for ( HexDirectionEnum i = 0 ; i < HexDirectionEnum.Length ; i++ ) {
+            if ( previousCell.GetNeighbor( i ) == currentCell ) {
+                dragDirection = i ;
+                isDrag = true ;
+                return ;
+            }
+        }
+        isDrag = false ;
+    }
+
+    private void EditCells( HexCell center ) {
+        int centerX = center.coordinates.X ;
+        int centerZ = center.coordinates.Z ;
+
+        for ( int r = 0 , z = centerZ - brushSize ; z <= centerZ ; z++, r++ ) {
+            for ( int x = centerX - r ; x <= centerX + brushSize ; x++ ) {
+                EditCell( hexGrid.GetCell( new HexCoordinates( x , z ) ) ) ;
+            }
+        }
+        for ( int r = 0 , z = centerZ + brushSize ; z > centerZ ; z--, r++ ) {
+            for ( int x = centerX - brushSize ; x <= centerX + r ; x++ ) {
+                EditCell( hexGrid.GetCell( new HexCoordinates( x , z ) ) ) ;
+            }
+        }
+
+    }
+
+    public void EditCell( HexCell cell ) {
+        if ( cell == null ) return ;
+        if ( applyColor ) cell.Color = activeColor ;
+        if ( applyElevation ) cell.Elevation = activeElevation ;
+        if ( applyWaterLevel ) cell.WaterLevel = activeWaterLevel ;
+        if ( applyUrbanLevel ) cell.UrbanLevel = activeUrbanlevel ;
+        if ( riverMode == OptionalToggle.Remove ) cell.RemoveRiver() ;
+        if ( roadMode == OptionalToggle.Remove ) cell.RemoveRoads() ;
+        if ( isDrag ) {
+            HexCell otherCell = cell.GetNeighbor( dragDirection.Opposite() ) ;
+            if ( otherCell != null ) {
+                if ( riverMode == OptionalToggle.Add ) previousCell.SetOutGoingRiver( dragDirection ) ;
+                if ( roadMode == OptionalToggle.Add ) previousCell.AddRoad( dragDirection ) ;
+            }
         }
     }
 
@@ -100,48 +146,12 @@ public class HexMapManager : MonoBehaviour {
         activeWaterLevel = Mathf.FloorToInt( level ) ;
     }
 
-    private void ValidateDrag( HexCell currentCell ) {
-        for (HexDirectionEnum i = 0 ; i < HexDirectionEnum.Length ; i++ ) {
-            if ( previousCell.GetNeighbor( i ) == currentCell ) {
-                dragDirection = i ;
-                isDrag = true ;
-                return ;
-            }
-        }
-        isDrag = false ;
+    public void SetAppUrbanLevel( bool toggle ) {
+        applyUrbanLevel = toggle ;
     }
 
-    private void EditCells( HexCell center ) {
-        int centerX = center.coordinates.X;
-        int centerZ = center.coordinates.Z;
-
-        for ( int r = 0, z = centerZ - brushSize; z <= centerZ; z++, r++ ) {
-            for ( int x = centerX - r; x <= centerX + brushSize; x++ ) {
-                EditCell( hexGrid.GetCell( new HexCoordinates( x, z ) ) );
-            }
-        }
-        for ( int r = 0, z = centerZ + brushSize; z > centerZ; z--, r++ ) {
-            for ( int x = centerX - brushSize; x <= centerX + r; x++ ) {
-                EditCell( hexGrid.GetCell( new HexCoordinates( x, z ) ) );
-            }
-        }
-
-    }
-
-    public void EditCell( HexCell cell ) {
-        if ( cell == null ) return;
-        if ( applyColor ) cell.Color = activeColor;
-        if ( applyElevation ) cell.Elevation = activeElevation;
-        if ( applyWaterLevel ) cell.WaterLevel = activeWaterLevel ;
-        if ( riverMode == OptionalToggle.Remove ) cell.RemoveRiver();
-        if ( roadMode == OptionalToggle.Remove ) cell.RemoveRoads() ;
-        if ( isDrag ) {
-            HexCell otherCell = cell.GetNeighbor( dragDirection.Opposite() ) ;
-            if ( otherCell != null ) {
-                if ( riverMode == OptionalToggle.Add ) previousCell.SetOutGoingRiver( dragDirection ) ;
-                if ( roadMode == OptionalToggle.Add ) previousCell.AddRoad( dragDirection ) ;
-            }
-        }
+    public void SetUrbanLevel( float level ) {
+        activeUrbanlevel = (int) level ;
     }
 
     
