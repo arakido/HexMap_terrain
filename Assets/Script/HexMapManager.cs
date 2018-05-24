@@ -12,14 +12,20 @@ public class HexMapManager : MonoBehaviour {
     private int activeElevation;
     private int activeWaterLevel ;
     private int activeUrbanlevel ;
+    private int activeFarmlevel ;
+    private int activePlantlevel ;
 
     private bool applyColor ;
     private bool applyElevation;
     private bool applyWaterLevel ;
     private bool applyUrbanLevel ;
+    private bool applyFarmLevel ;
+    private bool applyPlantLevel ;
 
     private OptionalToggle riverMode ;
     private OptionalToggle roadMode ;
+    private OptionalToggle walledMode ;
+
     private bool isDrag ;
     private HexDirectionEnum dragDirection ;
     private HexCell previousCell ;
@@ -49,6 +55,7 @@ public class HexMapManager : MonoBehaviour {
         if ( Physics.Raycast( inputRay , out hit ) ) {
             //hexGrid.TouchCell( hit.point , activeColor ) ;
             HexCell currentCell = hexGrid.GetCell( hit.point ) ;
+            if ( currentCell == null ) return ;
             if ( previousCell && previousCell != currentCell ) {
                 ValidateDrag( currentCell ) ;
             }
@@ -98,8 +105,12 @@ public class HexMapManager : MonoBehaviour {
         if ( applyElevation ) cell.Elevation = activeElevation ;
         if ( applyWaterLevel ) cell.WaterLevel = activeWaterLevel ;
         if ( applyUrbanLevel ) cell.UrbanLevel = activeUrbanlevel ;
+        if ( applyFarmLevel ) cell.FarmLevel = activeFarmlevel ;
+        if ( applyPlantLevel ) cell.PlantLevel = activePlantlevel ;
+
         if ( riverMode == OptionalToggle.Remove ) cell.RemoveRiver() ;
         if ( roadMode == OptionalToggle.Remove ) cell.RemoveRoads() ;
+        if ( walledMode != OptionalToggle.Ignore ) cell.Walled = walledMode == OptionalToggle.Add ;
         if ( isDrag ) {
             HexCell otherCell = cell.GetNeighbor( dragDirection.Opposite() ) ;
             if ( otherCell != null ) {
@@ -154,6 +165,24 @@ public class HexMapManager : MonoBehaviour {
         activeUrbanlevel = (int) level ;
     }
 
-    
+    public void SetAppFarmLevel(bool toggle) {
+        applyFarmLevel = toggle;
+    }
+
+    public void SetFarmLevel(float level) {
+        activeFarmlevel = (int)level;
+    }
+
+    public void SetAppPlantLevel(bool toggle) {
+        applyPlantLevel = toggle;
+    }
+
+    public void SetPlantLevel(float level) {
+        activePlantlevel = (int)level;
+    }
+
+    public void SetWalledModle( int mode ) {
+        walledMode = (OptionalToggle) mode ;
+    }
 }
 

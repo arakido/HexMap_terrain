@@ -184,13 +184,15 @@ public class HexGridChunk : MonoBehaviour {
             NoNeighborConnection( direction , cell , edge ) ;
             return ;
         }
-
         Vector3 bridge = HexMetrics.GetTwoBridge( direction ) ;
         bridge.y = neighbor.postion.y - cell.postion.y ;
 
         EdgeVertices edge2 = new EdgeVertices( edge.v1 + bridge , edge.v5 + bridge ) ;
 
-        if ( cell.HasRiverThroughEdge( direction ) ) {
+        bool hasRiver = cell.HasRiverThroughEdge(direction);
+        bool hasRoad = cell.HasRoadThroughEdge(direction);
+
+        if ( hasRiver ) {
             edge2.v3.y = neighbor.StreamBedHight ;
             if ( !cell.IsUnderWater ) {
                 if ( !neighbor.IsUnderWater ) {
@@ -209,13 +211,16 @@ public class HexGridChunk : MonoBehaviour {
             }
         }
 
+        
+
         if ( cell.GetEdgeType( direction ) == HexEdgeType.Slope ) {
-            TriangulateEdgeTerraces( edge, cell.Color, edge2, neighbor.Color, cell.HasRoadThroughEdge( direction ) );
+            TriangulateEdgeTerraces( edge , cell.Color , edge2 , neighbor.Color , hasRoad ) ;
         }
         else {
-            TriangulateEdgeStrip( edge, cell.Color, edge2, neighbor.Color, cell.HasRoadThroughEdge( direction ) );
+            TriangulateEdgeStrip( edge , cell.Color , edge2 , neighbor.Color , hasRoad ) ;
         }
 
+        feature.AddWall( edge , cell , edge2 , neighbor ,hasRiver,hasRoad) ;
         
 
         //处理三角形
@@ -358,6 +363,8 @@ public class HexGridChunk : MonoBehaviour {
             AddTerrainPerturTriangle( begin , left , right ) ;
             AddTerrainTriangleColor( beginCell.Color , leftCell.Color , rightCell.Color ) ;
         }
+
+        feature.AddWall( begin , beginCell , left , leftCell , right , rightCell ) ;
     }
 
     //绘制斜坡小三角
@@ -699,6 +706,9 @@ public class HexGridChunk : MonoBehaviour {
                 corner = HexMetrics.GetFirstSolidCorner( direction );
             }
             roadCenter += corner * 0.5f;
+            if ( cell.InComingRive == direction.Next() ) {
+                feature.AddBridge( roadCenter , center - corner * 0.5f ) ;
+            }
             center += corner * 0.25f;
         }
         else if ( cell.InComingRive == cell.OutGoingRive.Previous( ) ) {
@@ -950,6 +960,8 @@ public class HexGridChunk : MonoBehaviour {
     }
 
     #endregion
+
+    
 
     private bool DirectionOnRight( HexDirectionEnum direction ) {
         return direction == HexDirectionEnum.TopRight ||

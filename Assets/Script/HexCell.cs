@@ -294,6 +294,39 @@ public class HexCell : MonoBehaviour {
     }
     private int urbanLevel ;
 
+    public int FarmLevel {
+        get { return farmLevel ; }
+        set {
+            if ( farmLevel != value ) {
+                farmLevel = value ;
+                RefreshSelfOnly();
+            }
+        }        
+    }
+    private int farmLevel ;
+
+    public int PlantLevel {
+        get { return plantLevel ; }
+        set {
+            if ( plantLevel != value ) {
+                plantLevel = value ;
+                RefreshSelfOnly();
+            }
+        }
+    }
+    private int plantLevel ;
+
+    public bool Walled {
+        get { return walled ; }
+        set {
+            if ( walled != value ) {
+                walled = value ;
+                Refresh();
+            }
+        }
+    }
+    private bool walled ;
+
     #endregion
 
 }

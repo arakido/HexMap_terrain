@@ -20,6 +20,6 @@ public class UISliderText : MonoBehaviour
 	}
 
     public void SetText( float sliderValue ) {
-        text.text = Mathf.FloorToInt( sliderValue ).ToString( );
+        text.text = sliderValue.ToString( "#" ) ;
     }
 }

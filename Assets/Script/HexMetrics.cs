@@ -193,20 +193,67 @@ public class HexMetrics {
         return hashGrid[ x + z * hashGridSize ] ;
     }
 
+    private static float[][] featureThresholds = {   new[] {0f , 0f , 0.4f} ,
+                                                     new[] {0f , 0.4f , 0.6f} ,
+                                                     new[] {0.4f , 0.6f , 0.8f}
+                                                 } ;
+
+    public static float[] GetFeatureThresholds( int level ) {
+        return featureThresholds[ level ] ;
+    }
+
     public static int GetFeatureRandomLevel( int level ,float hash) {
+        Random.State currentState = Random.state;
+        Random.InitState(GetRandomSeed());
         int rand = Random.Range( 1 , 101 ) ;
         int weight = 0 ;
         for ( int i = 0 ; i < level ; i++ ) {
             weight += Random.Range( 1 , (100 - weight) / (level - i) ) ;
             if ( rand <= weight ) {
-                if ( hash < weight ) return i ;
+                Random.state = currentState;
+                if ( hash * 100 < weight ) return i ; 
                 return -1 ;
             }
         }
+        Random.state = currentState;
         return level -1 ;
     }
 
+    private static int GetRandomSeed() {
+        byte[] bytes = new byte[4];
+        System.Security.Cryptography.RNGCryptoServiceProvider rng = new System.Security.Cryptography.RNGCryptoServiceProvider();
+        rng.GetBytes(bytes);
+        return System.BitConverter.ToInt32(bytes, 0);
+    }
+
     #endregion
+
+    #region 围墙
+
+    public const float wallHeight = 4f;
+    public const float wallYOffset = -1f ;
+    public const float wallTowerThreshold = 0.5f ;
+    private const float wallThickness = 0.75f;
+    private const float wallElevationOffset = verticalTerraceSetSize ;
+
+    public static Vector3 WallThicknessOffset(Vector3 near, Vector3 far) {
+        Vector3 offset = Vector3.zero;
+        offset.x = far.x - near.x;
+        offset.z = far.z - near.z;
+        return offset.normalized * (wallThickness * 0.5f);
+    }
+
+    public static Vector3 WallLerp(Vector3 near, Vector3 far) {
+        near.x += (far.x - near.x) * 0.5f;
+        near.z += (far.z - near.z) * 0.5f;
+        float v = near.y < far.y ? wallElevationOffset : (1 - wallElevationOffset) ;
+        near.y += (far.y - near.y) * v + wallYOffset ;
+        return near ;
+    }
+
+    #endregion
+
+
 }
 
 
