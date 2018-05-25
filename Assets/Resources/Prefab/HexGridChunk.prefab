@@ -688,6 +688,10 @@ MonoBehaviour:
   - prefabs:
     - {fileID: 4118933348395878, guid: a26cf8bf98e068040bab793920c6ee96, type: 2}
     - {fileID: 4118933348395878, guid: e2af2bce960343d449def676a5998781, type: 2}
+  specials:
+  - {fileID: 4917577638351690, guid: cc054cdc4cfafcb479549d8e841f14eb, type: 2}
+  - {fileID: 4088298535080010, guid: 0d7dd327625bec343ac73b972caa9139, type: 2}
+  - {fileID: 4061689895674298, guid: ea44cf1b5556ee64fa91952aa4ab8e32, type: 2}
   walls: {fileID: 114534226082334298}
   wallTower: {fileID: 4961265810593412, guid: f32b4b8b21516dd4885a2e60a4f42d65, type: 2}
   bridge: {fileID: 4739425455365378, guid: 9d3684fd08bdbb041ba9f01b41d209db, type: 2}

@@ -243,17 +243,17 @@ public class HexGridChunk : MonoBehaviour {
 
                 if ( cell.Elevation <= neighbor.Elevation ) {
                     if ( cell.Elevation <= nextNeighbor.Elevation ) {
-                        TriangulateCorner( edge.v5 , cell , edge2.v5 , neighbor , v5 , nextNeighbor ) ;
+                        TriangulateCorner( edge.v5 , cell , edge2.v5 , neighbor , v5 , nextNeighbor , nextNeighbor.Color) ;
                     }
                     else {
-                        TriangulateCorner( v5 , nextNeighbor , edge.v5 , cell , edge2.v5 , neighbor ) ;
+                        TriangulateCorner( v5 , nextNeighbor , edge.v5 , cell , edge2.v5 , neighbor, neighbor.Color) ;
                     }
                 }
                 else if ( neighbor.Elevation <= nextNeighbor.Elevation ) {
-                    TriangulateCorner( edge2.v5 , neighbor , v5 , nextNeighbor , edge.v5 , cell ) ;
+                    TriangulateCorner( edge2.v5 , neighbor , v5 , nextNeighbor , edge.v5 , cell, cell.Color) ;
                 }
                 else {
-                    TriangulateCorner( v5 , nextNeighbor , edge.v5 , cell , edge2.v5 , neighbor ) ;
+                    TriangulateCorner( v5 , nextNeighbor , edge.v5 , cell , edge2.v5 , neighbor, neighbor.Color) ;
                 }
             }
         }
@@ -261,11 +261,11 @@ public class HexGridChunk : MonoBehaviour {
 
             //绘制缺失的小三角 
             HexCell noneCell = new GameObject().AddComponent<HexCell>() ;
-            noneCell.Color = (cell.Color + neighbor.Color) * 0.5f ;
+            Color noneColor = (cell.Color + neighbor.Color) * 0.5f ;
 
             Vector3 v5 = cell.postion + HexMetrics.GetSecondCorner( direction ) ;
             v5.y = 0 ;
-            TriangulateCorner( edge.v5 , cell , edge2.v5 , neighbor , v5 , noneCell ) ;
+            TriangulateCorner( edge.v5 , cell , edge2.v5 , neighbor , v5 , noneCell , noneColor) ;
             DestroyObject( noneCell.gameObject ) ;
         }
 
@@ -273,11 +273,11 @@ public class HexGridChunk : MonoBehaviour {
         HexCell prevNeighbor = cell.GetNeighbor( direction.Previous() ) ;
         if ( prevNeighbor == null ) {
             HexCell noneCell = new GameObject().AddComponent<HexCell>() ;
-            noneCell.Color = (cell.Color + cell.Color + neighbor.Color) / 3f ;
+            Color noneColor = (cell.Color + cell.Color + neighbor.Color) / 3f ;
 
             Vector3 v5 = cell.postion + HexMetrics.GetFirstCorner( direction ) ;
             v5.y = 0 ;
-            TriangulateCorner( edge.v1 , cell , v5 , noneCell , edge2.v1 , neighbor ) ;
+            TriangulateCorner( edge.v1 , cell , v5 , noneCell , edge2.v1 , neighbor, noneColor) ;
             DestroyObject( noneCell.gameObject ) ;
         }
     }
@@ -303,9 +303,9 @@ public class HexGridChunk : MonoBehaviour {
             edge2 = new EdgeVertices( v3 , v6 ) ;
 
             HexCell noneCell = new GameObject().AddComponent<HexCell>() ;
-            noneCell.Color = (cell.Color + cell.Color + prevNeighbor.Color) / 3f ;
+            Color noneColor = (cell.Color + cell.Color + prevNeighbor.Color) / 3f ;
 
-            TriangulateCorner( edge.v1 , cell , v5 , prevNeighbor , v3 , noneCell ) ;
+            TriangulateCorner( edge.v1 , cell , v5 , prevNeighbor , v3 , noneCell, noneColor) ;
             DestroyObject( noneCell.gameObject ) ;
         }
         if ( cell.Elevation == HexMetrics.elevationDiffer ) {
@@ -337,16 +337,16 @@ public class HexGridChunk : MonoBehaviour {
     
 
     //绘制小三角
-    private void TriangulateCorner( Vector3 begin , HexCell beginCell , Vector3 left , HexCell leftCell , Vector3 right , HexCell rightCell ) {
+    private void TriangulateCorner( Vector3 begin , HexCell beginCell , Vector3 left , HexCell leftCell , Vector3 right , HexCell rightCell ,Color rightColor) {
         HexEdgeType leftEdgeType = beginCell.GetEdgeType( leftCell ) ;
         HexEdgeType rightEdgeType = beginCell.GetEdgeType( rightCell ) ;
 
         if ( leftEdgeType == HexEdgeType.Slope ) {
             if ( rightEdgeType == HexEdgeType.Slope ) {
-                TriangulateCornerTerraces( begin , beginCell.Color , left , leftCell.Color , right , rightCell.Color ) ;
+                TriangulateCornerTerraces( begin , beginCell.Color , left , leftCell.Color , right , rightColor) ;
             }
             else if ( rightEdgeType == HexEdgeType.Flat ) {
-                TriangulateCornerTerraces( left , leftCell.Color , right , rightCell.Color , begin , beginCell.Color ) ;
+                TriangulateCornerTerraces( left , leftCell.Color , right , rightColor, begin , beginCell.Color ) ;
             }
             else {
                 TriangulateCornerTerracesCliff( begin , beginCell , left , leftCell , right , rightCell ) ;
@@ -355,7 +355,7 @@ public class HexGridChunk : MonoBehaviour {
 
         else if ( rightEdgeType == HexEdgeType.Slope ) {
             if ( leftEdgeType == HexEdgeType.Flat ) {
-                TriangulateCornerTerraces( right , rightCell.Color , begin , beginCell.Color , left , leftCell.Color ) ;
+                TriangulateCornerTerraces( right , rightColor, begin , beginCell.Color , left , leftCell.Color ) ;
             }
             else {
                 TriangulateCornerCliffTerraces( begin , beginCell , left , leftCell , right , rightCell ) ;

@@ -11,7 +11,6 @@ public class HexGrid : MonoBehaviour {
     public HexGridChunk chunkPrefab ;
     public Text cellLabelPrefab ;
     public Texture2D noiseSource ;
-
     public int hashSeed ;
 
     private int cellCountX ;
@@ -21,7 +20,6 @@ public class HexGrid : MonoBehaviour {
     private HexGridChunk[] chunks ;
     private Canvas gridCanvas ;
     private HexMesh hexMesh ;
-    private Color defaultColor = Color.white ;
 
 
     private void Awake() {
@@ -45,6 +43,23 @@ public class HexGrid : MonoBehaviour {
     // Use this for initialization
     private void Start() {
     }
+
+
+    public void Save( System.IO.BinaryWriter writer ) {
+        for ( int i = 0 ; i < cells.Length ; i++ ) {
+            cells[i].Save( writer );
+        }
+    }
+
+    public void Load( System.IO.BinaryReader reader ) {
+        for (int i = 0; i < cells.Length; i++) {
+            cells[ i ].Load( reader ) ;
+        }
+        for (int i = 0; i < cells.Length; i++) {
+            cells[i].Refresh();
+        }
+    }
+
 
     private void CreateChunks() {
         chunks = new HexGridChunk[chunkCountX * chunkCountZ];
@@ -78,7 +93,6 @@ public class HexGrid : MonoBehaviour {
         //cell.transform.SetParent( transform,true );
         cell.transform.localPosition = position ;
         cell.coordinates = HexCoordinates.FromOffsetCoordinates( x,z );
-        cell.Color = defaultColor ;
         cell.transform.name = "cell_" + i ;
 
         //添加相邻的HexCell

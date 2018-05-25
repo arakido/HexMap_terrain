@@ -10,14 +10,22 @@ public class HexCell : MonoBehaviour {
 
     public HexGridChunk chunk;
 
-    public Color Color { get { return _color ; }
+    public int TerrainTypeIndex {
+        get { return terrainTypeIndex ; }
         set {
-            if ( _color == value ) return ;
-            _color = value ;
-            Refresh() ;
+            if ( terrainTypeIndex != value ) {
+                terrainTypeIndex = value ;
+                Refresh();
+            }
         }
     }
-    private Color _color;
+    private int terrainTypeIndex;
+
+    public Color Color {
+        get {
+            return HexMetrics.colors[TerrainTypeIndex] ;
+        }
+    }
 
     public int Elevation {
         get { return elevation >= 0 ? elevation : 0 ; }
@@ -34,6 +42,7 @@ public class HexCell : MonoBehaviour {
 
     [HideInInspector] public Vector3 postion { get { return transform.localPosition; } }
 
+    
 
 
     // Use this for initialization
@@ -46,7 +55,62 @@ public class HexCell : MonoBehaviour {
 	
 	}
 
-    private void Refresh() {
+    public void Save( System.IO.BinaryWriter writer ) {
+        writer.Write( (byte)TerrainTypeIndex );
+        writer.Write((byte)Elevation );
+        writer.Write((byte)WaterLevel );
+        writer.Write((byte)UrbanLevel );
+        writer.Write((byte)FarmLevel );
+        writer.Write((byte)PlantLevel );
+        writer.Write( SpecialIndex );
+        writer.Write( walled );
+
+        /*writer.Write( HasInComingRiver );
+        writer.Write((byte)InComingRive );
+        writer.Write( HasOutGoingRive );
+        writer.Write((byte)OutGoingRive );*/
+        if ( HasInComingRiver ) writer.Write( (byte) (InComingRive + 128) ) ;
+        else writer.Write( (byte) 0 ) ;
+        if ( HasOutGoingRive ) writer.Write( (byte) (OutGoingRive + 128) ) ;
+        else writer.Write( (byte) 0 ) ;
+
+        int roadFlags = 0 ;
+        for ( int i = 0 ; i < roads.Length ; i++ ) {
+            if ( roads[ i ] ) roadFlags |= 1 << i ;
+        }
+
+        writer.Write(roadFlags);
+    }
+
+    public void Load( System.IO.BinaryReader reader ) {
+        TerrainTypeIndex = reader.ReadByte() ;
+        Elevation = reader.ReadByte();
+        WaterLevel = reader.ReadByte();
+        UrbanLevel = reader.ReadByte();
+        FarmLevel = reader.ReadByte();
+        PlantLevel = reader.ReadByte();
+        SpecialIndex = reader.ReadByte();
+        walled = reader.ReadBoolean() ;
+
+        /*HasInComingRiver = reader.ReadBoolean();
+        InComingRive = (HexDirectionEnum)reader.ReadByte();
+        HasOutGoingRive = reader.ReadBoolean();
+        OutGoingRive = (HexDirectionEnum)reader.ReadByte();*/
+        byte riverData = reader.ReadByte() ;
+        HasInComingRiver = riverData >= 128 ;
+        if (HasInComingRiver) InComingRive = (HexDirectionEnum)(riverData - 128);
+        riverData = reader.ReadByte();
+        HasOutGoingRive = riverData >= 128;
+        if ( HasOutGoingRive ) OutGoingRive = (HexDirectionEnum) (riverData - 128) ;
+
+        int roadFlags = reader.ReadByte() ;
+        for ( int i = 0 ; i < roads.Length ; i++ ) {
+            roads[ i ] = (roadFlags & (1 << i)) != 0 ;
+        }
+    }
+
+
+    public void Refresh() {
         if ( !chunk ) return ;
 
         chunk.Refresh() ;

@@ -1,13 +1,14 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.IO ;
 using UnityEngine.EventSystems ;
 
 public class HexMapManager : MonoBehaviour {
 
     public HexGrid hexGrid ;
 
-    private Color[] colors ;
-    private Color activeColor ;
+    private int activeTerrainTypeIndex  ;
+
     private int brushSize;
     private int activeElevation;
     private int activeWaterLevel ;
@@ -16,7 +17,6 @@ public class HexMapManager : MonoBehaviour {
     private int activePlantlevel ;
     private int activeSpecialIndex ;
 
-    private bool applyColor ;
     private bool applyElevation;
     private bool applyWaterLevel ;
     private bool applyUrbanLevel ;
@@ -33,7 +33,6 @@ public class HexMapManager : MonoBehaviour {
     private HexCell previousCell ;
 
     private void Awake() {
-        colors = new Color[] { Color.yellow, Color.green, Color.blue, Color.cyan, Color.white, };
     }
 
     // Use this for initialization
@@ -50,6 +49,8 @@ public class HexMapManager : MonoBehaviour {
             previousCell = null ;
         }
     }
+
+    
 
     private void HandleInput() {
         Ray inputRay = Camera.main.ScreenPointToRay( Input.mousePosition ) ;
@@ -103,7 +104,7 @@ public class HexMapManager : MonoBehaviour {
 
     public void EditCell( HexCell cell ) {
         if ( cell == null ) return ;
-        if ( applyColor ) cell.Color = activeColor ;
+        if ( activeTerrainTypeIndex >= 0 ) cell.TerrainTypeIndex = activeTerrainTypeIndex ;
         if ( applyElevation ) cell.Elevation = activeElevation ;
         if ( applyWaterLevel ) cell.WaterLevel = activeWaterLevel ;
         if ( applyUrbanLevel ) cell.UrbanLevel = activeUrbanlevel ;
@@ -127,9 +128,8 @@ public class HexMapManager : MonoBehaviour {
         hexGrid.ShowUI( visible );
     }
 
-    public void SelectColor( int index ) {
-        applyColor = index >= 0;
-        if ( applyColor ) activeColor = colors[index];
+    public void SetTerrainTypeIndex( int index ) {
+        activeTerrainTypeIndex = index ;
     }
 
     public void SetApplyElevation( bool isApply ) {
@@ -195,5 +195,26 @@ public class HexMapManager : MonoBehaviour {
     public void SetSpecialIndex( float index ) {
         activeSpecialIndex = (int) index ;
     }
+
+    //private readonly string mapPath = Application.dataPath + "/Respurce/" ;
+
+    public void Save() {
+        using ( FileStream fs = File.Open( GetMapPath() , FileMode.Create ) ) {
+            using ( BinaryWriter writer = new BinaryWriter( fs ) ) {
+                hexGrid.Save( writer ) ;
+            }
+        }
+    }
+
+    public void Load() {
+        using ( BinaryReader reader = new BinaryReader( System.IO.File.OpenRead( GetMapPath() ) ) ) {
+            hexGrid.Load( reader ) ;
+        }
+    }
+
+    private string GetMapPath() {
+        return Application.dataPath + "/Resources/test.map";
+    }
+
 }
 
