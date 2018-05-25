@@ -14,6 +14,7 @@ public class HexMapManager : MonoBehaviour {
     private int activeUrbanlevel ;
     private int activeFarmlevel ;
     private int activePlantlevel ;
+    private int activeSpecialIndex ;
 
     private bool applyColor ;
     private bool applyElevation;
@@ -21,6 +22,7 @@ public class HexMapManager : MonoBehaviour {
     private bool applyUrbanLevel ;
     private bool applyFarmLevel ;
     private bool applyPlantLevel ;
+    private bool applySpecialIndex;
 
     private OptionalToggle riverMode ;
     private OptionalToggle roadMode ;
@@ -107,6 +109,7 @@ public class HexMapManager : MonoBehaviour {
         if ( applyUrbanLevel ) cell.UrbanLevel = activeUrbanlevel ;
         if ( applyFarmLevel ) cell.FarmLevel = activeFarmlevel ;
         if ( applyPlantLevel ) cell.PlantLevel = activePlantlevel ;
+        if ( applySpecialIndex ) cell.SpecialIndex = activeSpecialIndex ;
 
         if ( riverMode == OptionalToggle.Remove ) cell.RemoveRiver() ;
         if ( roadMode == OptionalToggle.Remove ) cell.RemoveRoads() ;
@@ -183,6 +186,14 @@ public class HexMapManager : MonoBehaviour {
 
     public void SetWalledModle( int mode ) {
         walledMode = (OptionalToggle) mode ;
+    }
+
+    public void SetApplySpecialIndex( bool toggle ) {
+        applySpecialIndex = toggle ;
+    }
+
+    public void SetSpecialIndex( float index ) {
+        activeSpecialIndex = (int) index ;
     }
 }
 

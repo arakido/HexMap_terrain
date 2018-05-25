@@ -7,13 +7,16 @@ public class HexFeatureManager : MonoBehaviour {
     public HexFeatureCollection[] urbanCollections ;
     public HexFeatureCollection[] farmCollections ;
     public HexFeatureCollection[] plantCollections ;
+    public Transform[] specials ;
     public HexMesh walls;
     public Transform wallTower ;
     public Transform bridge ;
 
     private Transform container;
+    private float bridgeLength = 11;
 
     public void AddFeature(HexCell cell, Vector3 position ) {
+        if ( cell.IsSpecial ) return ;
 
         HexHash hash = HexMetrics.SampleHashGrid( position ) ;
         Transform prefab = PickPrefab(urbanCollections, cell.UrbanLevel , hash.a ,hash.d) ;
@@ -215,16 +218,28 @@ public class HexFeatureManager : MonoBehaviour {
 
     #endregion
 
-    #region 桥梁
 
+
+    //桥梁
     public void AddBridge( Vector3 roadCenter1 , Vector3 roadCenter2 ) {
         roadCenter1 = HexMetrics.Perturb( roadCenter1 ) ;
         roadCenter2 = HexMetrics.Perturb( roadCenter2 ) ;
         Transform instance = Instantiate( bridge ) ;
         instance.localPosition = (roadCenter1 + roadCenter2) * 0.5f ;
         instance.right = roadCenter2 - roadCenter1 ;
+
+        float length = Vector3.Distance( roadCenter1 , roadCenter2 ) ;
+        instance.localScale = new Vector3( length * (1 / bridgeLength) , 1f , 1f ) ;
+
         instance.SetParent( container , false ) ;
     }
 
-    #endregion
+    public void AddSpecialFeature( HexCell cell , Vector3 position ) {
+        Transform instance = Instantiate( specials[ cell.SpecialIndex - 1 ] ) ;
+        instance.localPosition = HexMetrics.Perturb( position ) ;
+        HexHash hash = HexMetrics.SampleHashGrid( position ) ;
+        instance.localRotation = Quaternion.Euler( 0f, 360 * hash.e , 0f );
+        instance.SetParent( container,false );
+    }
+
 }

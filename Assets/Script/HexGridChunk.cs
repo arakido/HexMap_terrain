@@ -96,56 +96,66 @@ public class HexGridChunk : MonoBehaviour {
     /// </summary>
     /// <param name="cell"></param>
     private void Triangulate( HexCell cell ) {
-        Vector3 center = cell.postion ;
         for ( HexDirectionEnum i = 0 ; i < HexDirectionEnum.Length ; i++ ) {
-            //绘制内三角
-            Vector3 v1 = center + HexMetrics.GetFirstSolidCorner( i ) ;
-            Vector3 v2 = center + HexMetrics.GetSecondSolidCorner( i ) ;
-
-            EdgeVertices edge = new EdgeVertices( v1 , v2 ) ;
-
-            if ( cell.HasRiver ) {
-                if ( cell.HasRiverThroughEdge( i ) ) {
-                    edge.v3.y = cell.StreamBedHight ;
-                    if ( cell.HasRiverBeginOrEnd ) {
-                        TriangulateWithRiverBegubOrEnd( cell , i , center , edge ) ;
-                    }
-                    else {
-                        TriangulateWithRiver( cell , i , center , edge ) ;
-                    }
-                }
-                else {
-                    TriangulateAdjacentToRiver( cell , i , center , edge ) ;
-                    if ( !cell.IsUnderWater && !cell.HasRoadThroughEdge( i ) ) {
-                        feature.AddFeature(cell, (center + edge.v1 + edge.v5) * (1 / 3f));
-                    }
-                }
-            }
-            else {
-                TriangulateWithoutRiver( cell ,i , center,edge );
-                if ( !cell.IsUnderWater && !cell.HasRoadThroughEdge( i ) ) {
-                    feature.AddFeature(cell, (center + edge.v1 + edge.v5) * (1 / 3f) ) ;
-                }
-            }
-
-            //绘制外梯形，为了避免重复绘制，两个三角形只绘制一次
-            if (DirectionOnRight(i)) {
-                TrangulateConnection( i , cell , edge ) ;
-            }
-            else if ( cell.GetNeighbor( i ) == null ) {
-                NoNeighborConnection( i , cell , edge ) ;
-            }
-
-            if ( cell.IsUnderWater ) {
-                TriangulateWater( i , cell , center ) ;
-            }
+            Triangulate( cell , i ) ;
         }
-        if(!cell.IsUnderWater && !cell.HasRiver && !cell.HasRoads) {
-            feature.AddFeature( cell , cell.postion ) ;
+
+        //特征物体
+        if ( !cell.IsUnderWater ) {
+            if ( !cell.HasRiver && !cell.HasRoads ) {
+                feature.AddFeature( cell , cell.postion ) ;
+            }
+            if ( cell.IsSpecial ) {
+                feature.AddSpecialFeature( cell , cell.postion ) ;
+            }
         }
     }
 
-    
+    private void Triangulate( HexCell cell , HexDirectionEnum direction ) {
+        Vector3 center = cell.postion ;
+        //绘制内三角
+        Vector3 v1 = center + HexMetrics.GetFirstSolidCorner( direction ) ;
+        Vector3 v2 = center + HexMetrics.GetSecondSolidCorner( direction ) ;
+
+        EdgeVertices edge = new EdgeVertices( v1 , v2 ) ;
+
+        if ( cell.HasRiver ) {
+            if ( cell.HasRiverThroughEdge( direction ) ) {
+                edge.v3.y = cell.StreamBedHight ;
+                if ( cell.HasRiverBeginOrEnd ) {
+                    TriangulateWithRiverBegubOrEnd( cell , direction , center , edge ) ;
+                }
+                else {
+                    TriangulateWithRiver( cell , direction , center , edge ) ;
+                }
+            }
+            else {
+                TriangulateAdjacentToRiver( cell , direction , center , edge ) ;
+                if ( !cell.IsUnderWater && !cell.HasRoadThroughEdge( direction ) ) {
+                    feature.AddFeature( cell , (center + edge.v1 + edge.v5) * (1 / 3f) ) ;
+                }
+            }
+        }
+        else {
+            TriangulateWithoutRiver( cell , direction , center , edge ) ;
+            if ( !cell.IsUnderWater && !cell.HasRoadThroughEdge( direction ) ) {
+                feature.AddFeature( cell , (center + edge.v1 + edge.v5) * (1 / 3f) ) ;
+            }
+        }
+
+        //绘制外梯形，为了避免重复绘制，两个三角形只绘制一次
+        if ( DirectionOnRight( direction ) ) {
+            TrangulateConnection( direction , cell , edge ) ;
+        }
+        else if ( cell.GetNeighbor( direction ) == null ) {
+            NoNeighborConnection( direction , cell , edge ) ;
+        }
+
+        if ( cell.IsUnderWater ) {
+            TriangulateWater( direction , cell , center ) ;
+        }
+    }
+
     private void TriangulateEdgeFan( Vector3 center , EdgeVertices edge , Color color ) {
         AddTerrainPerturTriangle( center , edge.v1 , edge.v2 ) ;
         AddTerrainTriangleColor( color ) ;
@@ -706,9 +716,11 @@ public class HexGridChunk : MonoBehaviour {
                 corner = HexMetrics.GetFirstSolidCorner( direction );
             }
             roadCenter += corner * 0.5f;
-            if ( cell.InComingRive == direction.Next() ) {
+            //桥梁
+            if ( cell.InComingRive == direction.Next() && cell.HasRoadThroughEdge( direction.Next(2) )|| cell.HasRoadThroughEdge( direction.Opposite() )) {
                 feature.AddBridge( roadCenter , center - corner * 0.5f ) ;
             }
+
             center += corner * 0.25f;
         }
         else if ( cell.InComingRive == cell.OutGoingRive.Previous( ) ) {
@@ -731,7 +743,12 @@ public class HexGridChunk : MonoBehaviour {
             if ( !cell.HasRoadThroughEdge( middle ) && !cell.HasRoadThroughEdge( middle.Previous( ) ) &&
                  !cell.HasRoadThroughEdge( middle.Next( ) ) ) return;
 
-            roadCenter += HexMetrics.GetSolidEdgeMiddle( middle ) * 0.25f;
+            Vector3 offset = HexMetrics.GetSolidEdgeMiddle( middle ) ;
+            roadCenter += offset * 0.25f;
+            //桥梁
+            if ( direction == middle && cell.HasRoadThroughEdge( direction.Opposite() ) ) {
+                feature.AddBridge( roadCenter , center - offset * (HexMetrics.innerToOuter * 0.7f) ) ;
+            }
         }
 
         Vector3 mL = Vector3.Lerp( roadCenter, edge.v1, interpolators.x );

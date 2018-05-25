@@ -132,6 +132,7 @@ public class HexCell : MonoBehaviour {
 
     public void SetInComgingRiver( HexDirectionEnum direction ) {
         RemoveInComingRiver();
+        SpecialIndex = 0;
         HasInComingRiver = true ;
         InComingRive = direction ;
     }
@@ -146,6 +147,7 @@ public class HexCell : MonoBehaviour {
             RemoveInComingRiver();
         }
 
+        SpecialIndex = 0 ;
         HasOutGoingRive = true ;
         OutGoingRive = direction ;
 
@@ -227,7 +229,8 @@ public class HexCell : MonoBehaviour {
     }
 
     private bool RoadElevationSuitable( HexDirectionEnum direction ) {
-        return !roads[(int)direction] && !HasRiverThroughEdge(direction) && GetElevationDifference( direction ) <= 1 ;
+        if ( IsSpecial || GetNeighbor( direction ).IsSpecial ) return false ;
+        return  !roads[(int)direction] && !HasRiverThroughEdge(direction) && GetElevationDifference( direction ) <= 1 ;
     }
 
     public void RemoveRoads() {
@@ -326,6 +329,20 @@ public class HexCell : MonoBehaviour {
         }
     }
     private bool walled ;
+
+    public int SpecialIndex {
+        get { return specialIndex ; }
+        set {
+            if ( specialIndex != value && !HasRiver) {
+                specialIndex = value ;
+                RemoveRoads();
+                RefreshSelfOnly();
+            }
+        }
+    }
+    private int specialIndex ;
+
+    public bool IsSpecial { get { return SpecialIndex > 0 ; } }
 
     #endregion
 
