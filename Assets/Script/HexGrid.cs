@@ -4,8 +4,9 @@ using UnityEngine.UI ;
 
 public class HexGrid : MonoBehaviour {
 
-    public int chunkCountX = 4 ;
-    public int chunkCountZ = 3 ;
+    public int cellCountX = 20;
+    public int cellCountZ = 15;
+    
 
     public HexCell cellPrefab ;
     public HexGridChunk chunkPrefab ;
@@ -13,8 +14,9 @@ public class HexGrid : MonoBehaviour {
     public Texture2D noiseSource ;
     public int hashSeed ;
 
-    private int cellCountX ;
-    private int cellCountZ ;
+    private int chunkCountX ;
+    private int chunkCountZ ;
+
 
     private HexCell[] cells ;
     private HexGridChunk[] chunks ;
@@ -26,11 +28,34 @@ public class HexGrid : MonoBehaviour {
         HexMetrics.noiseSource = noiseSource ;
         HexMetrics.InitTialzeHashGrid( hashSeed ) ;
 
-        cellCountX = chunkCountX * HexMetrics.chunkSizeX ;
-        cellCountZ = chunkCountZ * HexMetrics.chunkSizeZ ;
+        CreateMap( cellCountX , cellCountZ);
+    }
 
-        CreateChunks() ;
-        CreateCells() ;
+    public void CreateMap( int x, int z ) {
+        if ( x <= 0 || x % HexMetrics.chunkSizeX != 0 ) {
+            Debug.LogError( "Error : Unsupported map X size :" + x );
+            return;
+        }
+        if ( z <= 0 || z % HexMetrics.chunkSizeZ != 0 ) {
+            Debug.LogError( "Error : Unsupported map Z size" + x );
+            return;
+        }
+
+        if ( chunks != null ) {
+            for ( int i = 0 ; i < chunks.Length ; i++ ) {
+                Destroy( chunks[i].gameObject );
+            }
+        }
+
+        cellCountX = x;
+        cellCountZ = z;
+        chunkCountX = cellCountX / HexMetrics.chunkSizeX;
+        chunkCountZ = cellCountZ / HexMetrics.chunkSizeZ;
+
+        CreateChunks();
+        CreateCells();
+
+        HexMapCamera.ValidatePosition();
     }
 
     private void OnEnable() {
@@ -46,12 +71,15 @@ public class HexGrid : MonoBehaviour {
 
 
     public void Save( System.IO.BinaryWriter writer ) {
+        writer.Write( cellCountX );
+        writer.Write( cellCountZ );
         for ( int i = 0 ; i < cells.Length ; i++ ) {
             cells[i].Save( writer );
         }
     }
 
     public void Load( System.IO.BinaryReader reader ) {
+        CreateMap( reader.ReadInt32() , reader.ReadInt32() );
         for (int i = 0; i < cells.Length; i++) {
             cells[ i ].Load( reader ) ;
         }

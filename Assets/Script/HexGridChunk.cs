@@ -19,7 +19,6 @@ public class HexGridChunk : MonoBehaviour {
 
     private void Awake() {
         gridCanvas = GetComponentInChildren<Canvas>() ;
-        //terrain = GetComponentInChildren<HexMesh>() ;
 
         cells = new HexCell[HexMetrics.chunkSizeX * HexMetrics.chunkSizeZ];
 
@@ -40,11 +39,12 @@ public class HexGridChunk : MonoBehaviour {
 	}
 
     private void LateUpdate() {
-        Triangulate( );
+        Triangulate();
         enabled = false ;
     }
 
     public void Refresh() {
+
         enabled = true ;
     }
 
@@ -90,12 +90,15 @@ public class HexGridChunk : MonoBehaviour {
      *         \/
      *        center
      */
-
     /// <summary>
     /// 绘制六边形
     /// </summary>
     /// <param name="cell"></param>
     private void Triangulate( HexCell cell ) {
+        if ( cell == null ) {
+            Debug.LogError( "Cell is Null" );
+        };
+
         for ( HexDirectionEnum i = 0 ; i < HexDirectionEnum.Length ; i++ ) {
             Triangulate( cell , i ) ;
         }
@@ -569,7 +572,6 @@ public class HexGridChunk : MonoBehaviour {
         if ( cell.IsUnderWater ) {
             return ;
         }
-        bool reversed = cell.InComingRive == direction;
         if ( cell.HasRoads ) {
             Vector2 interpoltors = GetRoadInterpolators( direction, cell );
             TriangulateRoad( center, 

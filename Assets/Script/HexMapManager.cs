@@ -201,6 +201,7 @@ public class HexMapManager : MonoBehaviour {
     public void Save() {
         using ( FileStream fs = File.Open( GetMapPath() , FileMode.Create ) ) {
             using ( BinaryWriter writer = new BinaryWriter( fs ) ) {
+                writer.Write( 0 );
                 hexGrid.Save( writer ) ;
             }
         }
@@ -208,7 +209,9 @@ public class HexMapManager : MonoBehaviour {
 
     public void Load() {
         using ( BinaryReader reader = new BinaryReader( System.IO.File.OpenRead( GetMapPath() ) ) ) {
-            hexGrid.Load( reader ) ;
+            int header = reader.ReadInt32();
+            if ( header == 0 ) hexGrid.Load( reader );
+            else Debug.LogError( "Error :Unknown map format " + header );
         }
     }
 

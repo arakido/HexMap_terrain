@@ -57,18 +57,16 @@ public class HexCell : MonoBehaviour {
 
     public void Save( System.IO.BinaryWriter writer ) {
         writer.Write( (byte)TerrainTypeIndex );
-        writer.Write((byte)Elevation );
-        writer.Write((byte)WaterLevel );
-        writer.Write((byte)UrbanLevel );
-        writer.Write((byte)FarmLevel );
-        writer.Write((byte)PlantLevel );
-        writer.Write( SpecialIndex );
+        //Debug.Log( " : " +  );
+        writer.Write( (byte)Elevation );
+        writer.Write( (byte)WaterLevel );
+        writer.Write( (byte)UrbanLevel );
+        writer.Write( (byte)FarmLevel );
+        writer.Write( (byte)PlantLevel );
+        writer.Write( (byte)SpecialIndex );
         writer.Write( walled );
 
-        /*writer.Write( HasInComingRiver );
-        writer.Write((byte)InComingRive );
-        writer.Write( HasOutGoingRive );
-        writer.Write((byte)OutGoingRive );*/
+
         if ( HasInComingRiver ) writer.Write( (byte) (InComingRive + 128) ) ;
         else writer.Write( (byte) 0 ) ;
         if ( HasOutGoingRive ) writer.Write( (byte) (OutGoingRive + 128) ) ;
@@ -79,7 +77,7 @@ public class HexCell : MonoBehaviour {
             if ( roads[ i ] ) roadFlags |= 1 << i ;
         }
 
-        writer.Write(roadFlags);
+        writer.Write( (byte)roadFlags );
     }
 
     public void Load( System.IO.BinaryReader reader ) {
@@ -92,10 +90,6 @@ public class HexCell : MonoBehaviour {
         SpecialIndex = reader.ReadByte();
         walled = reader.ReadBoolean() ;
 
-        /*HasInComingRiver = reader.ReadBoolean();
-        InComingRive = (HexDirectionEnum)reader.ReadByte();
-        HasOutGoingRive = reader.ReadBoolean();
-        OutGoingRive = (HexDirectionEnum)reader.ReadByte();*/
         byte riverData = reader.ReadByte() ;
         HasInComingRiver = riverData >= 128 ;
         if (HasInComingRiver) InComingRive = (HexDirectionEnum)(riverData - 128);
