@@ -21,11 +21,6 @@ public class HexCell : MonoBehaviour {
     }
     private int terrainTypeIndex;
 
-    public Color Color {
-        get {
-            return HexMetrics.colors[TerrainTypeIndex] ;
-        }
-    }
 
     public int Elevation {
         get { return elevation >= 0 ? elevation : 0 ; }

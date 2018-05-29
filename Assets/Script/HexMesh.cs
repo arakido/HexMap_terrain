@@ -10,6 +10,7 @@ public class HexMesh : MonoBehaviour {
     public bool useColors ;
     public bool useUvCoordinates ;
     public bool useUv2Coordinates ;
+    public bool useTerrainTypes ;
 
     private Mesh hexMesh ;
     private MeshCollider meshCollider ;
@@ -18,6 +19,7 @@ public class HexMesh : MonoBehaviour {
     [System.NonSerialized] List<Color> colors ;
     [System.NonSerialized] List<Vector2> uvs;   //uv
     [System.NonSerialized] List<Vector2> uv2s;   //uv
+    [System.NonSerialized] List<Vector3> terrainTypes;   //地形类型
 
     private void Awake() {
         GetComponent<MeshFilter>().mesh = hexMesh = new Mesh() ;
@@ -42,6 +44,7 @@ public class HexMesh : MonoBehaviour {
         if ( useColors ) colors = ListPool<Color>.Get() ;
         if ( useUvCoordinates ) uvs = ListPool<Vector2>.Get() ;
         if ( useUv2Coordinates ) uv2s = ListPool<Vector2>.Get() ;
+        if ( useTerrainTypes ) terrainTypes = ListPool<Vector3>.Get() ;
     }
 
     public void Apply() {
@@ -61,22 +64,46 @@ public class HexMesh : MonoBehaviour {
             hexMesh.SetUVs( 0, uv2s );
             ListPool<Vector2>.Add( uv2s );
         }
+        if ( useTerrainTypes ) {
+            hexMesh.SetUVs(0, terrainTypes);
+            ListPool<Vector3>.Add(terrainTypes);
+        }
         hexMesh.RecalculateNormals();
         if ( useCollider ) meshCollider.sharedMesh = hexMesh ;
     }
 
 
+    public void AddTriangleTerrainTypes( Vector3 types ) {
+        terrainTypes.Add( types );
+        terrainTypes.Add( types );
+        terrainTypes.Add( types );
+    }
+
+    public void AddPerturTriangleTerrainTypes( Vector3 types ) {
+        AddTriangleTerrainTypes( HexMetrics.Perturb( types ) );
+    }
+
+    public void AddQuadTerrainTypes( Vector3 types ) {
+        terrainTypes.Add( types );
+        terrainTypes.Add( types );
+        terrainTypes.Add( types );
+        terrainTypes.Add( types );
+    }
+
+    public void AddPerturbQuadTerrainTypes( Vector3 types ) {
+        AddQuadTerrainTypes(HexMetrics.Perturb(types));
+    }
+
 
     //添加内三角的三个标点和绘制顶点顺序？
-    public void AddTriangle(Vector3 v1, Vector3 v2, Vector3 v3)
-    {
-        int vertexIndex = vertices.Count;
+    public void AddTriangle( Vector3 v1 , Vector3 v2 , Vector3 v3 ) {
+        int vertexIndex = vertices.Count ;
         vertices.Add( v1 ) ;
         vertices.Add( v2 ) ;
         vertices.Add( v3 ) ;
-        triangles.Add(vertexIndex);
-        triangles.Add(vertexIndex + 1);
-        triangles.Add(vertexIndex + 2);
+        triangles.Add( vertexIndex ) ;
+        triangles.Add( vertexIndex + 1 ) ;
+        triangles.Add( vertexIndex + 2 ) ;
     }
 
     public void AddPerturTriangle( Vector3 v1 , Vector3 v2 , Vector3 v3 ) {

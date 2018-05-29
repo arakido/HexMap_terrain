@@ -35,8 +35,6 @@ public class HexMetrics {
     public const int hashGridSize = 256 ; //散列网格数
     private static HexHash[] hashGrid;//散列网格
 
-    public static readonly Color[] colors = new Color[] { Color.white, Color.yellow, Color.green, Color.blue, Color.cyan,  } ;
-
     public static Vector3[] corners {
         get {
             if ( _corners == null || _corners.Length <= 0 ) {

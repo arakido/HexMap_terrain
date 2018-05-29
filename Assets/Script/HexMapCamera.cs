@@ -69,6 +69,7 @@ public class HexMapCamera : MonoBehaviour {
 
         float angle = Mathf.Lerp( swivelMinZoom , swivelMaxZoom , zoom ) ;
         swivel.localRotation = Quaternion.Euler( angle , 0f , 0f ) ;
+        AdjustPostion(0,0);
     }
 
     private void AdjustPostion( float xDelta , float zDelta ) {
@@ -83,8 +84,8 @@ public class HexMapCamera : MonoBehaviour {
 
     //限制摄像机的位置
     private Vector3 ClampPosition( Vector3 position ) {
-        float xMax = (grid.cellCountX * HexMetrics.chunkSizeX - 0.5f ) * (2f * HexMetrics.innerRadius) ;
-        float zMax = (grid.cellCountZ * HexMetrics.chunkSizeZ - 1f ) * (1.5f * HexMetrics.outerRadius);
+        float xMax = (grid.cellCountX /** HexMetrics.chunkSizeX*/ - 0.5f ) * (2f * HexMetrics.innerRadius) ;
+        float zMax = (grid.cellCountZ /** HexMetrics.chunkSizeZ*/ - 1f ) * (1.5f * HexMetrics.outerRadius);
         position.x = Mathf.Clamp( position.x , 0f , xMax ) ;
         position.z = Mathf.Clamp( position.z , 0 , zMax ) ;
         return position ;

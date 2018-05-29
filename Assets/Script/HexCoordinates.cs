@@ -9,14 +9,7 @@ public class HexCoordinates {
 
     public int X { get { return pointX ; } }
     public int Z { get { return pointZ; } }
-    /*
-     * 六边形坐标使用的是立体坐标
-     * 使用 x+y+z=0 切割立方网格对角线平面得到的
-     * 参考资料：https://www.indienova.com/indie-game-development/hex-grids-reference/
-     * https://www.redblobgames.com/grids/hexagons/
-     * 本工程资料：http://gad.qq.com/program/translateview/7173811
-     * http://catlikecoding.com/unity/tutorials/hex-map/part-1/
-     */
+    
     public int Y { get { return pointY; } }
 
 
