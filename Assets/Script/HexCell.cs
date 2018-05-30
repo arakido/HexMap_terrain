@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.UI ;
 
 public class HexCell : MonoBehaviour {
 
@@ -9,6 +10,8 @@ public class HexCell : MonoBehaviour {
     public HexCoordinates coordinates ;
 
     public HexGridChunk chunk;
+
+    [HideInInspector] public Vector3 postion { get { return transform.localPosition; } }
 
     public int TerrainTypeIndex {
         get { return terrainTypeIndex ; }
@@ -35,9 +38,14 @@ public class HexCell : MonoBehaviour {
     }
     private int elevation = int.MinValue;
 
-    [HideInInspector] public Vector3 postion { get { return transform.localPosition; } }
-
-    
+    public int Distance {
+        get { return distance ; }
+        set {
+            distance = value ;
+            UpdateDistanceLabel();
+        }
+    }
+    private int distance ;
 
 
     // Use this for initialization
@@ -126,11 +134,16 @@ public class HexCell : MonoBehaviour {
         uiRect.localPosition = uiPosition;
     }
 
+    private void UpdateDistanceLabel() {
+        Text label = uiRect.GetComponent<Text>() ;
+        label.text = distance == int.MaxValue ? "" : distance.ToString() ;
+    }
+
+
     //设置相邻的三角形
     public void SetNeighbor( HexDirectionEnum direction , HexCell cell ) {
         neighbors[ (int) direction ] = cell ;
         cell.neighbors[ (int) direction.Opposite() ] = this ;
-
     }
 
     public HexCell GetNeighbor( HexDirectionEnum direction ) {

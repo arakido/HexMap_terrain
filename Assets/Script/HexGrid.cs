@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic ;
 using UnityEngine.UI ;
 
 public class HexGrid : MonoBehaviour {
@@ -20,8 +21,6 @@ public class HexGrid : MonoBehaviour {
 
     private HexCell[] cells ;
     private HexGridChunk[] chunks ;
-    private Canvas gridCanvas ;
-    private HexMesh hexMesh ;
 
 
     private void Awake() {
@@ -79,7 +78,9 @@ public class HexGrid : MonoBehaviour {
     }
 
     public void Load( System.IO.BinaryReader reader ) {
-        CreateMap( reader.ReadInt32() , reader.ReadInt32() );
+        Clean();
+
+        CreateMap(reader.ReadInt32(), reader.ReadInt32() );
         for (int i = 0; i < cells.Length; i++) {
             cells[ i ].Load( reader ) ;
         }
@@ -138,16 +139,16 @@ public class HexGrid : MonoBehaviour {
             }
         }
         Text label = Instantiate<Text>( cellLabelPrefab ) ;
-        //label.rectTransform.SetParent( gridCanvas.transform,true );
         label.rectTransform.anchoredPosition3D = new Vector2(position.x,position.z);
         label.rectTransform.Rotate( Vector3.zero );
-        label.text = cell.coordinates.ToStringOnSeparateLines() ;
 
         cell.uiRect = label.rectTransform;
         cell.Elevation = 0 ;
 
         AddCellToChunk( x , z , cell ) ;
     }
+
+    
 
     private void AddCellToChunk( int x , int z , HexCell cell ) {
         int chunkX = x / HexMetrics.chunkSizeX ;
@@ -187,4 +188,68 @@ public class HexGrid : MonoBehaviour {
         return cells[ x + z * cellCountX ];
     }
 
+
+    public void FindDistancesTo( HexCell cell ) {
+        Clean() ;
+        StartCoroutine( Search( cell ) ) ;
+    }
+
+    private IEnumerator Search( HexCell cell ) {
+        
+        WaitForSeconds delay = new WaitForSeconds( 1/60f );
+
+        List<HexCell> fromtier = new List<HexCell>();
+        cell.Distance = 0 ;
+        fromtier.Add( cell );
+
+        while ( fromtier.Count>0 ) {
+            yield return delay ;
+            HexCell current = fromtier[0] ;
+            fromtier.RemoveAt( 0 );
+            for (HexDirectionEnum d = 0 ; d < HexDirectionEnum.Length ; d++ ) {
+                HexCell neighbor = current.GetNeighbor( d ) ;
+
+                if ( Obstacle( current ,neighbor ) ) continue ;
+                int distance = current.Distance ;
+
+                if ( current.HasRoadThroughEdge( d ) ) distance += 1 ;
+                else {
+                    if ( current.GetEdgeType( neighbor ) == HexEdgeType.Flat ) distance += 5 ;
+                    else distance += 10 ;
+                    distance += neighbor.UrbanLevel + neighbor.FarmLevel + neighbor.PlantLevel ;
+                }
+
+                if ( neighbor.Distance == int.MaxValue ) {
+                    neighbor.Distance = distance;
+                    fromtier.Add(neighbor);
+                }
+                else if(distance <neighbor.Distance){
+                    neighbor.Distance = distance;
+
+                }
+                fromtier.Sort( ( x , y ) => x.Distance.CompareTo( y.Distance ) ) ;
+            }
+        }
+
+        /*for ( int i = 0 ; i < cells.Length ; i++ ) {
+            yield return delay ;
+            cells[ i ].Distance = cell.coordinates.DistancesTo( cells[ i ].coordinates ) ;
+        }*/
+    }
+
+    public void Clean() {
+        StopAllCoroutines();
+        for (int i = 0; i < cells.Length; i++) {
+            cells[i].Distance = int.MaxValue;
+        }
+    }
+
+    private bool Obstacle( HexCell cell , HexCell neighbor ) {
+        if ( neighbor == null ) return true ;
+        if ( cell.HasRiver ) return true ;
+        if ( neighbor.IsUnderWater ) return true ;
+        if ( cell.Walled != neighbor.Walled ) return true;
+        if ( cell.GetEdgeType( neighbor ) == HexEdgeType.Cliff ) return true;
+        return false ;
+    }
 }

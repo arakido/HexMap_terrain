@@ -84,14 +84,15 @@ public class HexMesh : MonoBehaviour {
     }
 
     public void AddQuadTerrainTypes( Vector3 types ) {
-        terrainTypes.Add( types );
-        terrainTypes.Add( types );
-        terrainTypes.Add( types );
-        terrainTypes.Add( types );
+        AddPerturbQuadTerrainTypes(HexMetrics.Perturb(types));
+        
     }
 
     public void AddPerturbQuadTerrainTypes( Vector3 types ) {
-        AddQuadTerrainTypes(HexMetrics.Perturb(types));
+        terrainTypes.Add(types);
+        terrainTypes.Add(types);
+        terrainTypes.Add(types);
+        terrainTypes.Add(types);
     }
 
 

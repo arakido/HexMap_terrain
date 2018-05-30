@@ -48,6 +48,10 @@ public class HexCoordinates {
         return new HexCoordinates( iX,iZ );
     }
 
+    public int DistancesTo( HexCoordinates other ) {
+        //使用的是立方体坐标，XYZ坐标总和为0，对其取绝对值后XYZ的和等于最大绝对值的2倍
+        return (Mathf.Abs( X - other.X ) + Mathf.Abs( Y - other.Y ) + Mathf.Abs( Z - other.Z )) / 2 ;
+    }
 
     public override string ToString() {
         return string.Format( "({0},{1},{2})" , X ,Y, Z ) ;

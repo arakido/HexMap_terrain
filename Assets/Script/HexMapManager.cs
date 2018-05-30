@@ -6,6 +6,7 @@ using UnityEngine.EventSystems ;
 public class HexMapManager : MonoBehaviour {
 
     public HexGrid hexGrid ;
+    public Material terrainMaterial ;
 
     private int activeTerrainTypeIndex  ;
 
@@ -17,6 +18,7 @@ public class HexMapManager : MonoBehaviour {
     private int activePlantlevel ;
     private int activeSpecialIndex ;
 
+    private bool editMode = true;
     private bool applyElevation;
     private bool applyWaterLevel ;
     private bool applyUrbanLevel ;
@@ -65,8 +67,9 @@ public class HexMapManager : MonoBehaviour {
             else {
                 isDrag = false ;
             }
-            if ( brushSize > 0 ) EditCells( currentCell ) ;
-            else EditCell( currentCell ) ;
+            if ( editMode ) EditCells(currentCell);
+            else hexGrid.FindDistancesTo( currentCell );
+            
             previousCell = currentCell ;
         }
         else {
@@ -86,6 +89,11 @@ public class HexMapManager : MonoBehaviour {
     }
 
     private void EditCells( HexCell center ) {
+        if ( brushSize <= 0 ) {
+            EditCell( center ) ;
+            return ;
+        }
+
         int centerX = center.coordinates.X ;
         int centerZ = center.coordinates.Z ;
 
@@ -126,6 +134,18 @@ public class HexMapManager : MonoBehaviour {
 
     public void ShowUI( bool visible ) {
         hexGrid.ShowUI( visible );
+    }
+
+    public void ShowGrid( bool visible ) {
+        if(visible)terrainMaterial.EnableKeyword( "GRID_ON" );
+        else terrainMaterial.DisableKeyword( "GRID_ON" );
+    }
+
+    public void SetEditMode( bool toggle ) {
+        editMode = toggle;
+        if(toggle) hexGrid.Clean();
+        hexGrid.ShowUI( !toggle );
+        ShowGrid( !toggle ) ;
     }
 
     public void SetTerrainTypeIndex( int index ) {
@@ -219,5 +239,8 @@ public class HexMapManager : MonoBehaviour {
         return Application.dataPath + "/Resources/test.map";
     }
 
+    private void OnDestroy() {
+        terrainMaterial.DisableKeyword("GRID_ON");
+    }
 }
 

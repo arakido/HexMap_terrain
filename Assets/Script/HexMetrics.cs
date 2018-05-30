@@ -138,15 +138,8 @@ public class HexMetrics {
         return position ;
     }
 
-
     #endregion
     
-    public static Vector3 GetSolidEdgeMiddle( HexDirectionEnum direction ) {
-        HexDirectionEnum next = direction + 1 ;
-        if ( next >= HexDirectionEnum.Length ) next -= HexDirectionEnum.Length ;
-        return (corners[ (int) direction ] + corners[ (int)next]) * (0.5f * solidFactor) ;
-    }
-
     #region 水
 
     public static Vector3 GetWaterFirstCorner(HexDirectionEnum direction) {
@@ -161,6 +154,12 @@ public class HexMetrics {
 
     public static Vector3 GetWaterBridge(HexDirectionEnum direction) {
         return (GetFirstCorner(direction) + GetSecondCorner(direction)) * waterBlendFactor;
+    }
+
+    public static Vector3 GetSolidEdgeMiddle(HexDirectionEnum direction) {
+        HexDirectionEnum next = direction + 1;
+        if (next >= HexDirectionEnum.Length) next -= HexDirectionEnum.Length;
+        return (corners[(int)direction] + corners[(int)next]) * (0.5f * solidFactor);
     }
 
     #endregion
