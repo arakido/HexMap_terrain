@@ -21,7 +21,7 @@ public class HexGrid : MonoBehaviour {
 
     private HexCell[] cells ;
     private HexGridChunk[] chunks ;
-
+    private HexCellPriorityQueue searchFrontier ;
 
     private void Awake() {
         HexMetrics.noiseSource = noiseSource ;
@@ -194,6 +194,11 @@ public class HexGrid : MonoBehaviour {
         StartCoroutine( Search( cell ) ) ;
     }
 
+    public void FindPath( HexCell fromCell , HexCell toCell ) {
+        Clean();
+        StartCoroutine( Search( fromCell , toCell ) ) ;
+    }
+
     private IEnumerator Search( HexCell cell ) {
         
         WaitForSeconds delay = new WaitForSeconds( 1/60f );
@@ -237,10 +242,65 @@ public class HexGrid : MonoBehaviour {
         }*/
     }
 
+    private IEnumerator Search(HexCell fromCell, HexCell toCell) {
+
+        if ( searchFrontier == null ) searchFrontier = new HexCellPriorityQueue() ;
+        else searchFrontier.Clear();
+
+        fromCell.EnableHighlight(Color.blue);
+        WaitForSeconds delay = new WaitForSeconds( 1 / 60f ) ;
+        toCell.EnableHighlight(Color.red);
+
+        fromCell.Distance = 0 ;
+        searchFrontier.Enqueue( fromCell );
+
+        while (searchFrontier.Count > 0 ) {
+            yield return delay ;
+            HexCell current = searchFrontier.Dequeue();
+
+            if ( current == toCell ) {
+                current = current.pathFrom ;
+                while ( current != fromCell ) {
+                    current.EnableHighlight();
+                    current = current.pathFrom ;
+                }
+                break ;
+            }
+
+            for ( HexDirectionEnum d = 0 ; d < HexDirectionEnum.Length ; d++ ) {
+                HexCell neighbor = current.GetNeighbor( d ) ;
+
+                if ( Obstacle( current , neighbor ) ) continue ;
+                int distance = current.Distance ;
+
+                if ( current.HasRoadThroughEdge( d ) ) distance += 1 ;
+                else {
+                    if ( current.GetEdgeType( neighbor ) == HexEdgeType.Flat ) distance += 5 ;
+                    else distance += 10 ;
+                    distance += neighbor.UrbanLevel + neighbor.FarmLevel + neighbor.PlantLevel ;
+                }
+
+                if ( neighbor.Distance == int.MaxValue ) {
+                    neighbor.Distance = distance;
+                    neighbor.pathFrom = current;
+                    neighbor.SearchHeuristic = neighbor.coordinates.DistancesTo(toCell.coordinates);
+                    searchFrontier.Enqueue(neighbor);
+                }
+                else  if ( distance < neighbor.Distance ) {
+                    int oldPriority = neighbor.SearchPriority ;
+                    neighbor.Distance = distance;
+                    neighbor.pathFrom = current;
+                    searchFrontier.Change( neighbor, oldPriority);
+                }
+            }
+        }
+    }
+
     public void Clean() {
         StopAllCoroutines();
         for (int i = 0; i < cells.Length; i++) {
             cells[i].Distance = int.MaxValue;
+            cells[i].DisableHighlight();
         }
     }
 

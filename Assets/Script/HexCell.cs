@@ -11,7 +11,12 @@ public class HexCell : MonoBehaviour {
 
     public HexGridChunk chunk;
 
-    [HideInInspector] public Vector3 postion { get { return transform.localPosition; } }
+    public Vector3 postion { get { return transform.localPosition; } }
+
+    public HexCell pathFrom { get ; set ; }
+    public int SearchHeuristic { get ; set ; }
+    public int SearchPriority { get { return Distance + SearchHeuristic ; } }
+    public HexCell NextWithSamePriority { get ; set ; }
 
     public int TerrainTypeIndex {
         get { return terrainTypeIndex ; }
@@ -57,6 +62,8 @@ public class HexCell : MonoBehaviour {
 	void Update () {
 	
 	}
+
+    #region Save & Load
 
     public void Save( System.IO.BinaryWriter writer ) {
         writer.Write( (byte)TerrainTypeIndex );
@@ -106,6 +113,7 @@ public class HexCell : MonoBehaviour {
         }
     }
 
+    #endregion
 
     public void Refresh() {
         if ( !chunk ) return ;
@@ -411,5 +419,21 @@ public class HexCell : MonoBehaviour {
     public bool IsSpecial { get { return SpecialIndex > 0 ; } }
 
     #endregion
+
+    public void EnableHighlight() {
+        EnableHighlight( Color.white ) ;
+    }
+
+    public void EnableHighlight( Color color ) {
+        Image highlight = uiRect.GetComponentInChildren<Image>();
+        highlight.enabled = true;
+        highlight.color = color ;
+    }
+
+    public void DisableHighlight() {
+        Image highlight = uiRect.GetComponentInChildren<Image>() ;
+        highlight.enabled = false ;
+    }
+
 
 }
