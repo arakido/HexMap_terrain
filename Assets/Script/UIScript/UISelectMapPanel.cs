@@ -72,7 +72,7 @@ public class UISelectMapPanel : MonoBehaviour {
     }
 
     private void InitMapItems() {
-        string[] paths = System.IO.Directory.GetFiles( Application.dataPath + "/Resources/Map/", "*.map" );
+        string[] paths = System.IO.Directory.GetFiles(GetMapDirectory(), "*.map" );
         Array.Sort( paths );
         for ( int i = 0; i < paths.Length; i++ ) {
             UIMapItem item = Instantiate( mapItem );
@@ -95,6 +95,7 @@ public class UISelectMapPanel : MonoBehaviour {
                 hexGrid.Save( writer );
             }
         }
+        RefreshProject();
         Hide();
     }
 
@@ -116,11 +117,22 @@ public class UISelectMapPanel : MonoBehaviour {
     }
 
     private string GetMapPath(string mapName) {
-        return Application.dataPath + "/Resources/Map/"+mapName+".map";
+        return GetMapDirectory() + mapName+".map";
     }
 
+    private string GetMapDirectory() {
+        string path = Application.dataPath + "/Resources/Map/" ;
+        if ( !System.IO.Directory.Exists( path ) ) {
+            System.IO.Directory.CreateDirectory( path ) ;
+            RefreshProject() ;
+        }
+        return path ;
+    }
 
-    
-
+    private void RefreshProject() {
+#if UNITY_EDITOR
+        UnityEditor.AssetDatabase.Refresh();
+#endif
+    }
 
 }

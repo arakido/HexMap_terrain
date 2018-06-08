@@ -18,7 +18,7 @@ public class HexMapManager : MonoBehaviour {
     private int activePlantlevel ;
     private int activeSpecialIndex ;
 
-    private bool editMode = true;
+    //private bool editMode = true;
     private bool applyElevation;
     private bool applyWaterLevel ;
     private bool applyUrbanLevel ;
@@ -33,10 +33,14 @@ public class HexMapManager : MonoBehaviour {
     private bool isDrag ;
     private HexDirectionEnum dragDirection ;
     private HexCell previousCell ;
-    private HexCell searchFromCell ;
-    private HexCell searchToCell ;
+    //private HexCell searchFromCell ;
+    //private HexCell searchToCell ;
+
+
 
     private void Awake() {
+        terrainMaterial.DisableKeyword("GRID_ON");
+        SetEditMode( false );
     }
 
     // Use this for initialization
@@ -46,49 +50,72 @@ public class HexMapManager : MonoBehaviour {
 
     // Update is called once per frame
     private void Update() {
-        if ( Input.GetMouseButton( 0 ) && !EventSystem.current.IsPointerOverGameObject()) {
-            HandleInput() ;
+        if ( !EventSystem.current.IsPointerOverGameObject() ) {
+            if (Input.GetMouseButton(0)) {
+                HandleInput();
+                return ;
+            }
+            if ( Input.GetKeyDown( KeyCode.U ) ) {
+                if(Input.GetKey( KeyCode.LeftShift ))DestroyUnit();
+                else CreateUnit();
+                return ;
+            }
         }
-        else {
-            previousCell = null ;
-        }
+        previousCell = null;
+        
     }
 
     
 
     private void HandleInput() {
-        Ray inputRay = Camera.main.ScreenPointToRay( Input.mousePosition ) ;
-        RaycastHit hit ;
-        if ( Physics.Raycast( inputRay , out hit ) ) {
-            //hexGrid.TouchCell( hit.point , activeColor ) ;
-            HexCell currentCell = hexGrid.GetCell( hit.point ) ;
-            if ( currentCell == null ) return ;
+        HexCell currentCell = GetCellUnderCursor() ;
+        if (currentCell) {
             if ( previousCell && previousCell != currentCell ) {
                 ValidateDrag( currentCell ) ;
             }
             else {
                 isDrag = false ;
             }
-            if ( editMode ) EditCells( currentCell ) ;
-            else {
+            //if ( editMode )
+            EditCells( currentCell ) ;
+
+            /*else {
+                if ( searchFromCell == currentCell || searchToCell == currentCell ) return ;
                 if ( Input.GetKey( KeyCode.LeftShift ) ) {
                     hexGrid.Clean();
                     searchFromCell = currentCell ;
                     searchFromCell.EnableHighlight(Color.blue);
-                    if(searchToCell && searchToCell != searchFromCell) hexGrid.FindPath(searchFromCell, searchToCell);
+                    if(searchToCell && searchToCell != searchFromCell) hexGrid.FindPath(searchFromCell, searchToCell, moveSpeed);
                 }
                 else if ( searchFromCell && searchFromCell != currentCell ) {
                     //hexGrid.FindDistancesTo( currentCell ) ;
                     searchToCell = currentCell ;
-                    hexGrid.FindPath(searchFromCell, searchToCell) ;
+                    hexGrid.FindPath(searchFromCell, searchToCell, moveSpeed) ;
                 }
-            }
+            }*/
             
             previousCell = currentCell ;
         }
         else {
             previousCell = null ;
         }
+    }
+
+    private HexCell GetCellUnderCursor() {
+        Ray inputRay = Camera.main.ScreenPointToRay( Input.mousePosition ) ;
+        return hexGrid.GetCell( inputRay ) ;
+    }
+
+    private void CreateUnit() {
+        HexCell cell = GetCellUnderCursor() ;
+        if ( cell && !cell.Unit) {
+            hexGrid.AddUnit( cell ,Random.Range( 0,360 ) );
+        }
+    }
+
+    private void DestroyUnit() {
+        HexCell cell = GetCellUnderCursor();
+        if (cell && cell.Unit) hexGrid.RemoveUnit( cell.Unit );
     }
 
     private void ValidateDrag( HexCell currentCell ) {
@@ -156,10 +183,11 @@ public class HexMapManager : MonoBehaviour {
     }
 
     public void SetEditMode( bool toggle ) {
-        editMode = toggle;
-        if(toggle) hexGrid.Clean();
-        hexGrid.ShowUI( !toggle );
-        ShowGrid( !toggle ) ;
+        //editMode = toggle;
+        //if(toggle) hexGrid.Clean();
+        //hexGrid.ShowUI( !toggle );
+        //ShowGrid( !toggle ) ;
+        enabled = toggle ;
     }
 
     public void SetTerrainTypeIndex( int index ) {
@@ -230,24 +258,6 @@ public class HexMapManager : MonoBehaviour {
         activeSpecialIndex = (int) index ;
     }
 
-    //private readonly string mapPath = Application.dataPath + "/Respurce/" ;
-
-    public void Save() {
-        using ( FileStream fs = File.Open( GetMapPath() , FileMode.Create ) ) {
-            using ( BinaryWriter writer = new BinaryWriter( fs ) ) {
-                writer.Write( 0 );
-                hexGrid.Save( writer ) ;
-            }
-        }
-    }
-
-    public void Load() {
-        using ( BinaryReader reader = new BinaryReader( System.IO.File.OpenRead( GetMapPath() ) ) ) {
-            int header = reader.ReadInt32();
-            if ( header == 0 ) hexGrid.Load( reader );
-            else Debug.LogError( "Error :Unknown map format " + header );
-        }
-    }
 
     private string GetMapPath() {
         return Application.dataPath + "/Resources/test.map";

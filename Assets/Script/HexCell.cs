@@ -16,7 +16,9 @@ public class HexCell : MonoBehaviour {
     public HexCell pathFrom { get ; set ; }
     public int SearchHeuristic { get ; set ; }
     public int SearchPriority { get { return Distance + SearchHeuristic ; } }
+    public int SearchPhase { get ; set ; }  //0未在边界中  1 处于边界中  2已移除边界
     public HexCell NextWithSamePriority { get ; set ; }
+
 
     public int TerrainTypeIndex {
         get { return terrainTypeIndex ; }
@@ -47,7 +49,7 @@ public class HexCell : MonoBehaviour {
         get { return distance ; }
         set {
             distance = value ;
-            UpdateDistanceLabel();
+            //UpdateDistanceLabel();
         }
     }
     private int distance ;
@@ -125,10 +127,12 @@ public class HexCell : MonoBehaviour {
                 neighbor.chunk.Refresh();
             }
         }
+        if (Unit) Unit.ValidateLoacation();
     }
 
     private void RefreshSelfOnly() {
         if ( chunk ) chunk.Refresh() ;
+        if(Unit)Unit.ValidateLoacation();
     }
 
     private void RefreshPosition() {
@@ -145,6 +149,15 @@ public class HexCell : MonoBehaviour {
     private void UpdateDistanceLabel() {
         Text label = uiRect.GetComponent<Text>() ;
         label.text = distance == int.MaxValue ? "" : distance.ToString() ;
+    }
+
+    public void SetLabel( int num ) {
+        SetLabel( num.ToString() ) ;
+    }
+
+    public void SetLabel( string text ) {
+        Text label = uiRect.GetComponent<Text>();
+        label.text = text;
     }
 
 
@@ -164,6 +177,21 @@ public class HexCell : MonoBehaviour {
 
     public HexEdgeType GetEdgeType( HexCell otherCell ) {
         return HexMetrics.GetEdgeType( Elevation,otherCell.Elevation );
+    }
+
+    public void EnableHighlight() {
+        EnableHighlight( Color.white ) ;
+    }
+
+    public void EnableHighlight( Color color ) {
+        Image highlight = uiRect.GetComponentInChildren<Image>() ;
+        highlight.enabled = true ;
+        highlight.color = color ;
+    }
+
+    public void DisableHighlight() {
+        Image highlight = uiRect.GetComponentInChildren<Image>() ;
+        highlight.enabled = false ;
     }
 
     #region 河流
@@ -420,20 +448,11 @@ public class HexCell : MonoBehaviour {
 
     #endregion
 
-    public void EnableHighlight() {
-        EnableHighlight( Color.white ) ;
+    public HexUnit Unit {
+        get { return unit ; }
+        set { unit = value ; }
     }
-
-    public void EnableHighlight( Color color ) {
-        Image highlight = uiRect.GetComponentInChildren<Image>();
-        highlight.enabled = true;
-        highlight.color = color ;
-    }
-
-    public void DisableHighlight() {
-        Image highlight = uiRect.GetComponentInChildren<Image>() ;
-        highlight.enabled = false ;
-    }
+    private HexUnit unit ;
 
 
 }

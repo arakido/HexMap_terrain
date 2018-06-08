@@ -9,7 +9,6 @@ public class HexCoordinates {
 
     public int X { get { return pointX ; } }
     public int Z { get { return pointZ; } }
-    
     public int Y { get { return pointY; } }
 
 
@@ -59,6 +58,15 @@ public class HexCoordinates {
 
     public string ToStringOnSeparateLines() {
         return X + "\n" +Y+"\n"+ Z ;
+    }
+
+    public void Save( System.IO.BinaryWriter writer ) {
+        writer.Write( X );
+        writer.Write( Z );
+    }
+
+    public static HexCoordinates Load( System.IO.BinaryReader reader ) {
+        return new HexCoordinates(reader.ReadInt32(), reader.ReadInt32());
     }
 
 }
