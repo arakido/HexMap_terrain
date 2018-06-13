@@ -18,6 +18,7 @@
 			#pragma target 3.5
 
 			#pragma multi_compile _ GRID_ON
+			#include "HexCellData.cginc"
 
 			//sampler2D _MainTex;
 			UNITY_DECLARE_TEX2DARRAY(_MainTex);
@@ -27,6 +28,7 @@
 			float4 color : COLOR;
 			float3 worldPos;
 			float3 terrain;
+			float3 visibility;
 		};
 
 		half _Glossiness;
@@ -43,13 +45,26 @@
 
 		void vert (inout appdata_full v, out Input data) {
 			UNITY_INITIALIZE_OUTPUT(Input, data);
-			data.terrain = v.texcoord2.xyz;
+			//data.terrain = v.texcoord2.xyz;
+
+			float4 cell0 = GetCellData(v, 0);
+			float4 cell1 = GetCellData(v, 1);
+			float4 cell2 = GetCellData(v, 2);
+
+			data.terrain.x = cell0.w;
+			data.terrain.y = cell1.w;
+			data.terrain.z = cell2.w;
+
+			data.visibility.x = cell0.x;
+			data.visibility.y = cell1.x;
+			data.visibility.z = cell2.x;
+			data.visibility = lerp(0.25, 1, data.visibility);
 		}
 
 		float4 GetTerrainColor(Input IN, int index) {
 			float3 uvw = float3(IN.worldPos.xz * 0.02, IN.terrain[index]);
 			float4 c = UNITY_SAMPLE_TEX2DARRAY(_MainTex, uvw);
-			return c * IN.color[index];
+			return c * (IN.color[index] * IN.visibility[index]);
 		}
 
 		void surf (Input IN, inout SurfaceOutputStandard o) {
@@ -60,7 +75,7 @@
 			fixed4 grid = 1;
 		#if defined(GRID_ON)
 			float2 gridUV = IN.worldPos.xz;
-			gridUV.x *= 1 / (4 * 10 * sin(radians(60.0)));//六边形同心圆的半径为10，中点到变得距离为 半径 * 弧度；Grid Texture 为两个六边形 所以为4倍的半径
+			gridUV.x *= 1 / (4 * 8.66025404);//六边形同心圆的半径为10，中点到变得距离为 半径 * 弧度；Grid Texture 为两个六边形 所以为4倍的半径
 			gridUV.y *= 1 / (2 * 15.0);	//两个六边形的Z轴距离为15
 			grid = tex2D(_GridTex, gridUV);
 		#endif

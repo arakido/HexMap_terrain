@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic ;
 using UnityEditorInternal ;
+using UnityEngine.Experimental.Rendering ;
 using UnityEngine.UI ;
 
 public class HexGrid : MonoBehaviour {
@@ -31,10 +32,13 @@ public class HexGrid : MonoBehaviour {
 
     private List<HexUnit> unitList = new List<HexUnit>() ; //单位保存
 
+    private HexCellShaderData cellShaderData ;
+
     private void Awake() {
         HexMetrics.noiseSource = noiseSource ;
         HexMetrics.InitTialzeHashGrid( hashSeed ) ;
         HexUnit.unitPrefab = unitPrefab ;
+        cellShaderData = gameObject.AddComponent<HexCellShaderData>() ;
 
         CreateMap( cellCountX , cellCountZ);
     }
@@ -106,6 +110,8 @@ public class HexGrid : MonoBehaviour {
         chunkCountX = cellCountX / HexMetrics.chunkSizeX ;
         chunkCountZ = cellCountZ / HexMetrics.chunkSizeZ ;
 
+        cellShaderData.Initialize( cellCountX,cellCountZ );
+
         CreateChunks() ;
         CreateCells() ;
 
@@ -144,7 +150,9 @@ public class HexGrid : MonoBehaviour {
         //cell.transform.SetParent( transform,true );
         cell.transform.localPosition = position ;
         cell.coordinates = HexCoordinates.FromOffsetCoordinates( x,z );
-        cell.transform.name = "cell_" + i ;
+        cell.Index = i ; 
+        cell.ShaderData = cellShaderData ;
+        cell.gameObject.name = "cell_" + i ;
 
         //添加相邻的HexCell
         if ( x > 0 ) {
@@ -218,8 +226,38 @@ public class HexGrid : MonoBehaviour {
             chunks[i].ShowUI( visible );
         }
     }
-    
 
+
+    #region 单位
+
+    private void LoadUnit( System.IO.BinaryReader reader ) {
+        HexUnit unit = Instantiate( unitPrefab ) ;
+        unit.Load( reader , this ) ;
+        unitList.Add( unit ) ;
+    }
+
+    public void AddUnit( HexCell location , float orientation ) {
+        HexUnit unit = Instantiate( unitPrefab ) ;
+        unit.transform.SetParent( transform , false ) ;
+        unit.hexGrid = this ;
+        unit.Location = location ;
+        unit.Orientation = orientation ;
+        unitList.Add( unit ) ;
+    }
+
+    public void RemoveUnit( HexUnit unit ) {
+        unitList.Remove( unit ) ;
+        unit.Die() ;
+    }
+
+    private void CleanUnits() {
+        for ( int i = 0 ; i < unitList.Count ; i++ ) {
+            unitList[ i ].Die() ;
+        }
+        unitList.Clear() ;
+    }
+
+    #endregion
 
     #region 寻路
 
@@ -401,6 +439,8 @@ public class HexGrid : MonoBehaviour {
         return false ;
     }
 
+    
+
     public void ClearPath() {
         for ( int i = 0 ; i < pathList.Count ; i++ ) {
             pathList[ i ].SetLabel( null ) ;
@@ -429,36 +469,75 @@ public class HexGrid : MonoBehaviour {
 
     #endregion
 
-    private void LoadUnit( System.IO.BinaryReader reader ) {
-        HexUnit unit = Instantiate(unitPrefab);
-        unit.Load( reader ,this);
-        unitList.Add(unit);
+    #region 视野
+
+    public void IncreaseVisibility( HexCell fromCell , int range ) {
+        List<HexCell> visibleCells = GetVisibleCells( fromCell , range ) ;
+        for ( int i = 0 ; i < visibleCells.Count ; i++ ) {
+            visibleCells[i].IncreaseVisibility();
+        }
+        ListPool<HexCell>.Add(visibleCells);
     }
 
-    public void AddUnit( HexCell location ,  float orientation ) {
-        HexUnit unit = Instantiate( unitPrefab ) ;
-        unit.transform.SetParent( transform,false );
-        unit.Location = location ;
-        unit.Orientation = orientation ;
-        unitList.Add( unit );
+    public void DecreaseVisibility( HexCell fromCell , int range ) {
+        List<HexCell> visibleCells = GetVisibleCells( fromCell , range ) ;
+        for ( int i = 0 ; i < visibleCells.Count ; i++ ) {
+            visibleCells[ i ].DecreaseVisibility() ;
+        }
+        ListPool<HexCell>.Add(visibleCells) ;
     }
 
-    public void RemoveUnit( HexUnit unit ) {
-        unitList.Remove( unit ) ;
-        unit.Die() ;
+    private List<HexCell> GetVisibleCells( HexCell fromCell , int range ) {
+        List<HexCell> visibilityCells = ListPool<HexCell>.Get() ;
+        searchFrontierPhase += 2 ;
+
+        if ( searchFrontier == null ) searchFrontier = new HexCellPriorityQueue() ;
+        else searchFrontier.Clear() ;
+
+        fromCell.SearchPhase = searchFrontierPhase ;
+        fromCell.Distance = 0 ;
+        searchFrontier.Enqueue( fromCell ) ;
+
+        while ( searchFrontier.Count > 0 ) {
+            HexCell current = searchFrontier.Dequeue() ;
+            current.SearchPhase += 1 ;
+
+            visibilityCells.Add( current ) ;
+
+            for ( HexDirectionEnum d = 0 ; d < HexDirectionEnum.Length ; d++ ) {
+                HexCell neighbor = current.GetNeighbor( d ) ;
+
+                if ( neighbor == null || neighbor.SearchPhase > searchFrontierPhase ) continue ;
+
+                int distance = current.Distance + 1 ;
+                if ( distance > range ) continue ;
+
+                if ( neighbor.SearchPhase < searchFrontierPhase ) {
+                    neighbor.SearchPhase = searchFrontierPhase ;
+                    neighbor.Distance = distance ;
+                    neighbor.SearchHeuristic = 0 ;
+                    searchFrontier.Enqueue( neighbor ) ;
+                }
+                else if ( distance < neighbor.Distance ) {
+                    int oldPriority = neighbor.SearchPriority ;
+                    neighbor.Distance = distance ;
+                    searchFrontier.Change( neighbor , oldPriority ) ;
+                }
+            }
+        }
+        return visibilityCells ;
     }
+
+    #endregion
+
+
 
     public void Clean() {
         ClearPath() ;
         CleanUnits() ;
     }
 
-    private void CleanUnits() {
-        for ( int i = 0 ; i < unitList.Count ; i++ ) {
-            unitList[i].Die();
-        }
-        unitList.Clear();
-    }
+    
 
     private bool Obstacle( HexCell cell , HexCell neighbor ) {
         if ( neighbor == null ) return true ;

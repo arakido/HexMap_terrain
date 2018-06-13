@@ -7,19 +7,21 @@ using System.Security.Cryptography.X509Certificates ;
 public class HexMesh : MonoBehaviour {
 
     public bool useCollider ;
-    public bool useColors ;
+    public bool useCellData ;
+    //public bool useColors ;
     public bool useUvCoordinates ;
     public bool useUv2Coordinates ;
-    public bool useTerrainTypes ;
+    //public bool useTerrainTypes ;
+
 
     private Mesh hexMesh ;
     private MeshCollider meshCollider ;
     [System.NonSerialized] List<Vector3> vertices ;//顶点数组
+    [System.NonSerialized] List<Vector3> cellIndices;   //地形类型
     [System.NonSerialized] List<int> triangles;//三角形数组
-    [System.NonSerialized] List<Color> colors ;
+    [System.NonSerialized] List<Color> cellWeights ;
     [System.NonSerialized] List<Vector2> uvs;   //uv
     [System.NonSerialized] List<Vector2> uv2s;   //uv
-    [System.NonSerialized] List<Vector3> terrainTypes;   //地形类型
 
     private void Awake() {
         GetComponent<MeshFilter>().mesh = hexMesh = new Mesh() ;
@@ -41,10 +43,12 @@ public class HexMesh : MonoBehaviour {
         hexMesh.Clear();
         vertices = ListPool<Vector3>.Get() ;
         triangles = ListPool<int>.Get() ;
-        if ( useColors ) colors = ListPool<Color>.Get() ;
+        if ( useCellData ) {
+            cellWeights = ListPool<Color>.Get() ;
+            cellIndices = ListPool<Vector3>.Get() ;
+        }
         if ( useUvCoordinates ) uvs = ListPool<Vector2>.Get() ;
         if ( useUv2Coordinates ) uv2s = ListPool<Vector2>.Get() ;
-        if ( useTerrainTypes ) terrainTypes = ListPool<Vector3>.Get() ;
     }
 
     public void Apply() {
@@ -52,49 +56,57 @@ public class HexMesh : MonoBehaviour {
         ListPool<Vector3>.Add( vertices );
         hexMesh.SetTriangles( triangles , 0 ) ;
         ListPool<int>.Add( triangles );
-        if(useColors) {
-            hexMesh.SetColors(colors);
-            ListPool<Color>.Add(colors);
-        }
+        
         if ( useUvCoordinates ) {
             hexMesh.SetUVs( 0,uvs );
             ListPool<Vector2>.Add( uvs );
         }
         if ( useUv2Coordinates ) {
-            hexMesh.SetUVs( 0, uv2s );
+            hexMesh.SetUVs( 1, uv2s );
             ListPool<Vector2>.Add( uv2s );
         }
-        if ( useTerrainTypes ) {
-            hexMesh.SetUVs(0, terrainTypes);
-            ListPool<Vector3>.Add(terrainTypes);
+        if (useCellData) {
+            hexMesh.SetColors(cellWeights);
+            ListPool<Color>.Add(cellWeights);
+            hexMesh.SetUVs(2, cellIndices);
+            ListPool<Vector3>.Add(cellIndices);
         }
         hexMesh.RecalculateNormals();
         if ( useCollider ) meshCollider.sharedMesh = hexMesh ;
     }
 
-
-    public void AddTriangleTerrainTypes( Vector3 types ) {
-        terrainTypes.Add( types );
-        terrainTypes.Add( types );
-        terrainTypes.Add( types );
+    public void AddTriangleCellData( Vector3 indices , Color weights1 , Color weights2 , Color weights3 ) {
+        cellIndices.Add( indices );
+        cellIndices.Add( indices );
+        cellIndices.Add( indices );
+        cellWeights.Add( weights1 );
+        cellWeights.Add( weights2 );
+        cellWeights.Add( weights3 );
     }
 
-    public void AddPerturTriangleTerrainTypes( Vector3 types ) {
-        AddTriangleTerrainTypes( HexMetrics.Perturb( types ) );
+    public void AddTriangleCellData(Vector3 indices, Color weights) {
+        AddTriangleCellData( indices , weights , weights , weights ) ;
+    }
+    
+    public void AddQuadCellData( Vector3 indices , Color weights1 , Color weights2 , Color weights3 , Color weights4 ) {
+        cellIndices.Add(indices);
+        cellIndices.Add(indices);
+        cellIndices.Add(indices);
+        cellIndices.Add(indices);
+        cellWeights.Add(weights1);
+        cellWeights.Add(weights2);
+        cellWeights.Add(weights3);
+        cellWeights.Add(weights4);
     }
 
-    public void AddQuadTerrainTypes( Vector3 types ) {
-        AddPerturbQuadTerrainTypes(HexMetrics.Perturb(types));
-        
+    public void AddQuadCellData(Vector3 indices, Color weights) {
+        AddQuadCellData( indices , weights , weights , weights , weights ) ;
     }
 
-    public void AddPerturbQuadTerrainTypes( Vector3 types ) {
-        terrainTypes.Add(types);
-        terrainTypes.Add(types);
-        terrainTypes.Add(types);
-        terrainTypes.Add(types);
+    public void AddQuadCellData(Vector3 indices, Color weights1, Color weights2) {
+        AddQuadCellData( indices , weights1 , weights1 , weights2 , weights2 ) ;
     }
-
+    
 
     //添加内三角的三个标点和绘制顶点顺序？
     public void AddTriangle( Vector3 v1 , Vector3 v2 , Vector3 v3 ) {
@@ -132,34 +144,8 @@ public class HexMesh : MonoBehaviour {
         AddQuad( HexMetrics.Perturb( v1 ) , HexMetrics.Perturb( v2 ) , HexMetrics.Perturb( v3 ) ,HexMetrics.Perturb( v4 ) ) ;
     }
 
-    public void AddTriangleColor(Color c1) {
-        AddTriangleColor( c1 , c1 , c1 ) ;
-    }
 
-    //内三角颜色
-    public void AddTriangleColor(Color c1, Color c2, Color c3) {
-        colors.Add(c1);
-        colors.Add(c2);
-        colors.Add(c3);
-    }
-
-    //梯形边颜色
-    public void AddQuadColor(Color c1) {
-        AddQuadColor(c1, c1);
-    }
-
-    public void AddQuadColor( Color c1 , Color c2  ) {
-        AddQuadColor( c1, c1, c2, c2 );
-    }
-
-    public void AddQuadColor( Color c1 , Color c2 , Color c3 , Color c4 ) {
-        colors.Add( c1 ) ;
-        colors.Add( c2 ) ;
-        colors.Add( c3 ) ;
-        colors.Add( c4 ) ;
-    }
-
-
+    //优化：使用 Vector2.zero代替 new Vector2(0,0)  其他同理
     public void AddTriangleUV( Vector2 uv1 , Vector2 uv2 , Vector2 uv3 ) {
         uvs.Add( uv1 );
         uvs.Add( uv2 );

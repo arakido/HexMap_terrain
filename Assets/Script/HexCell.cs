@@ -18,14 +18,17 @@ public class HexCell : MonoBehaviour {
     public int SearchPriority { get { return Distance + SearchHeuristic ; } }
     public int SearchPhase { get ; set ; }  //0未在边界中  1 处于边界中  2已移除边界
     public HexCell NextWithSamePriority { get ; set ; }
+    public HexCellShaderData ShaderData { get ; set ; }
 
+    public int Index { get ; set ; }
 
     public int TerrainTypeIndex {
         get { return terrainTypeIndex ; }
         set {
             if ( terrainTypeIndex != value ) {
                 terrainTypeIndex = value ;
-                Refresh();
+                //Refresh();
+                ShaderData.RefreshTerrain( this );
             }
         }
     }
@@ -53,6 +56,8 @@ public class HexCell : MonoBehaviour {
         }
     }
     private int distance ;
+
+    
 
 
     // Use this for initialization
@@ -240,7 +245,7 @@ public class HexCell : MonoBehaviour {
     }
 
     public void SetOutGoingRiver( HexDirectionEnum direction ) {
-        if ( IsUnderWater ) return;
+        if ( GetNeighbor( direction ).IsUnderWater ) return ;
         if ( HasOutGoingRive && OutGoingRive == direction ) return ;
         HexCell neighbor = GetNeighbor( direction ) ;
         if ( !IsValidRiverDestination( neighbor ) ) return;
@@ -454,5 +459,16 @@ public class HexCell : MonoBehaviour {
     }
     private HexUnit unit ;
 
+    public bool IsVisible { get { return visibility > 0; } }
+    private int visibility;
 
+    public void IncreaseVisibility() {
+        visibility += 1 ;
+        if(visibility == 1) ShaderData.RefreshVisibility( this );
+    }
+
+    public void DecreaseVisibility() {
+        visibility -= 1 ;
+        if(visibility == 0)ShaderData.RefreshVisibility( this );
+    }
 }

@@ -33,9 +33,6 @@ public class HexMapManager : MonoBehaviour {
     private bool isDrag ;
     private HexDirectionEnum dragDirection ;
     private HexCell previousCell ;
-    //private HexCell searchFromCell ;
-    //private HexCell searchToCell ;
-
 
 
     private void Awake() {
@@ -78,21 +75,6 @@ public class HexMapManager : MonoBehaviour {
             }
             //if ( editMode )
             EditCells( currentCell ) ;
-
-            /*else {
-                if ( searchFromCell == currentCell || searchToCell == currentCell ) return ;
-                if ( Input.GetKey( KeyCode.LeftShift ) ) {
-                    hexGrid.Clean();
-                    searchFromCell = currentCell ;
-                    searchFromCell.EnableHighlight(Color.blue);
-                    if(searchToCell && searchToCell != searchFromCell) hexGrid.FindPath(searchFromCell, searchToCell, moveSpeed);
-                }
-                else if ( searchFromCell && searchFromCell != currentCell ) {
-                    //hexGrid.FindDistancesTo( currentCell ) ;
-                    searchToCell = currentCell ;
-                    hexGrid.FindPath(searchFromCell, searchToCell, moveSpeed) ;
-                }
-            }*/
             
             previousCell = currentCell ;
         }
@@ -183,10 +165,6 @@ public class HexMapManager : MonoBehaviour {
     }
 
     public void SetEditMode( bool toggle ) {
-        //editMode = toggle;
-        //if(toggle) hexGrid.Clean();
-        //hexGrid.ShowUI( !toggle );
-        //ShowGrid( !toggle ) ;
         enabled = toggle ;
     }
 

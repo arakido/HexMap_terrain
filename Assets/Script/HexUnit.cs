@@ -5,10 +5,13 @@ using UnityEngine;
 public class HexUnit : MonoBehaviour {
 
     public static HexUnit unitPrefab ;
+    public HexGrid hexGrid { get ; set ; }
 
     private float travelSpeed = 3f ;
     private float rotationSpeed = 180f ;
-    private List<HexCell> pathToTravel ; 
+    private List<HexCell> pathToTravel ;
+
+    private const int visionRange = 2 ;
 
     public HexCell Location {
         get { return location ; }
@@ -16,11 +19,16 @@ public class HexUnit : MonoBehaviour {
             if ( location == value ) return ;
             if ( location ) location.Unit = null ;
             location = value;
-            value.Unit = this;
-            transform.localPosition = value.postion;
+            location.Unit = this;
+            //location.IncreaseVisibility();
+            hexGrid.IncreaseVisibility( location,visionRange );
+
+            transform.localPosition = location.postion;
         }
     }
     private HexCell location ;
+
+    private HexCell currentTravelLocation ;
     
     public float Orientation {
         get { return orientation ; }
@@ -33,6 +41,11 @@ public class HexUnit : MonoBehaviour {
 
     private void OnEnable() {
         if ( Location ) transform.localPosition = Location.postion ;
+        if ( currentTravelLocation ) {
+            hexGrid.IncreaseVisibility( location,visionRange );
+            hexGrid.DecreaseVisibility( currentTravelLocation,visionRange );
+            currentTravelLocation = null ;
+        }
     }
 
 
@@ -57,7 +70,10 @@ public class HexUnit : MonoBehaviour {
     }
 
     public void Travel( List<HexCell> path ) {
-        Location = path[ path.Count - 1 ] ;
+        //Location = path[ path.Count - 1 ] ;
+        location.Unit = null ;
+        location = path[ path.Count - 1 ] ;
+        location.Unit = this ;
 
         pathToTravel = ListPool<HexCell>.Get() ;
         pathToTravel.AddRange( path );
@@ -68,24 +84,33 @@ public class HexUnit : MonoBehaviour {
     private IEnumerator TravelPath() {
 
         Vector3 a, b, c = pathToTravel[0].postion;
-        transform.localPosition = c ;
+        //transform.localPosition = c ;
         yield return LoolAt( pathToTravel[ 1 ].postion ) ;
+
+        hexGrid.DecreaseVisibility( currentTravelLocation ? currentTravelLocation : pathToTravel[ 0 ] , visionRange ) ;
+
         float t = Time.deltaTime * travelSpeed;
         for ( int i = 1 ; i < pathToTravel.Count ; i++ ) {
+            currentTravelLocation = pathToTravel[ i ] ;
             a = c;
             b = pathToTravel[i - 1].postion;
-            c = (b + pathToTravel[i].postion) * 0.5f;
+            c = (b + currentTravelLocation.postion) * 0.5f;
+            hexGrid.IncreaseVisibility(currentTravelLocation, visionRange);
             for ( ; t < 1 ; t += Time.deltaTime * travelSpeed) {
                 MovePosition(a, b, c, t);
                 yield return null;
             }
+            hexGrid.DecreaseVisibility(currentTravelLocation, visionRange);
             t -= 1f ;
         }
 
+        currentTravelLocation = null ;
+
         a = c;
-        b = pathToTravel[pathToTravel.Count - 1].postion;
+        b = location.postion;
         c = b;
-        for ( ; t < 1; t += Time.deltaTime * travelSpeed) {
+        hexGrid.IncreaseVisibility(location, visionRange);
+        for (; t < 1; t += Time.deltaTime * travelSpeed) {
             MovePosition(a, b, c, t);
             yield return null ;
         }
@@ -151,7 +176,11 @@ public class HexUnit : MonoBehaviour {
 
 
     public void Die() {
-        Location.Unit = null ;
+        if ( Location ) {
+            //Location.DecreaseVisibility();
+            hexGrid.DecreaseVisibility(location, visionRange);
+            Location.Unit = null ;
+        }
         Destroy( gameObject );
     }
 
