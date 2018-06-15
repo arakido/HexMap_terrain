@@ -7,11 +7,13 @@ public class HexUnit : MonoBehaviour {
     public static HexUnit unitPrefab ;
     public HexGrid hexGrid { get ; set ; }
 
+    public int Speed { get { return 24 ; } }
+
     private float travelSpeed = 3f ;
     private float rotationSpeed = 180f ;
     private List<HexCell> pathToTravel ;
 
-    private const int visionRange = 2 ;
+    public int VisionRange { get { return 2 ; } }
 
     public HexCell Location {
         get { return location ; }
@@ -21,7 +23,7 @@ public class HexUnit : MonoBehaviour {
             location = value;
             location.Unit = this;
             //location.IncreaseVisibility();
-            hexGrid.IncreaseVisibility( location,visionRange );
+            hexGrid.IncreaseVisibility( location, VisionRange);
 
             transform.localPosition = location.postion;
         }
@@ -42,8 +44,8 @@ public class HexUnit : MonoBehaviour {
     private void OnEnable() {
         if ( Location ) transform.localPosition = Location.postion ;
         if ( currentTravelLocation ) {
-            hexGrid.IncreaseVisibility( location,visionRange );
-            hexGrid.DecreaseVisibility( currentTravelLocation,visionRange );
+            hexGrid.IncreaseVisibility( location,VisionRange );
+            hexGrid.DecreaseVisibility( currentTravelLocation,VisionRange );
             currentTravelLocation = null ;
         }
     }
@@ -55,7 +57,7 @@ public class HexUnit : MonoBehaviour {
 
     public bool IsValidDestination( HexCell cell ) {
         if ( cell == null ) return false ;
-        return !cell.IsUnderWater && !cell.Unit;
+        return cell.IsExplored && !cell.IsUnderWater && !cell.Unit;
     }
 
     public void Save( System.IO.BinaryWriter writer ) {
@@ -87,7 +89,7 @@ public class HexUnit : MonoBehaviour {
         //transform.localPosition = c ;
         yield return LoolAt( pathToTravel[ 1 ].postion ) ;
 
-        hexGrid.DecreaseVisibility( currentTravelLocation ? currentTravelLocation : pathToTravel[ 0 ] , visionRange ) ;
+        hexGrid.DecreaseVisibility( currentTravelLocation ? currentTravelLocation : pathToTravel[ 0 ] , VisionRange ) ;
 
         float t = Time.deltaTime * travelSpeed;
         for ( int i = 1 ; i < pathToTravel.Count ; i++ ) {
@@ -95,12 +97,12 @@ public class HexUnit : MonoBehaviour {
             a = c;
             b = pathToTravel[i - 1].postion;
             c = (b + currentTravelLocation.postion) * 0.5f;
-            hexGrid.IncreaseVisibility(currentTravelLocation, visionRange);
+            hexGrid.IncreaseVisibility(currentTravelLocation, VisionRange);
             for ( ; t < 1 ; t += Time.deltaTime * travelSpeed) {
                 MovePosition(a, b, c, t);
                 yield return null;
             }
-            hexGrid.DecreaseVisibility(currentTravelLocation, visionRange);
+            hexGrid.DecreaseVisibility(currentTravelLocation, VisionRange);
             t -= 1f ;
         }
 
@@ -109,7 +111,7 @@ public class HexUnit : MonoBehaviour {
         a = c;
         b = location.postion;
         c = b;
-        hexGrid.IncreaseVisibility(location, visionRange);
+        hexGrid.IncreaseVisibility(location, VisionRange);
         for (; t < 1; t += Time.deltaTime * travelSpeed) {
             MovePosition(a, b, c, t);
             yield return null ;
@@ -145,6 +147,24 @@ public class HexUnit : MonoBehaviour {
         
     }
 
+    public int GetMoveCost( HexCell fromCell , HexCell toCell , HexDirectionEnum direction ) {
+        if ( !IsValidDestination( toCell ) ) return -1 ;
+        if (fromCell.HasRiver) return -1;
+        if (fromCell.Walled != toCell.Walled) return -1;
+
+        HexEdgeType edgeType = fromCell.GetEdgeType( toCell ) ;
+        if (edgeType == HexEdgeType.Cliff ) return -1 ;
+
+        if ( fromCell.HasRoadThroughEdge( direction ) ) return 1 ;
+
+        int moveCost = edgeType == HexEdgeType.Flat ? 5 : 10;
+        moveCost += toCell.UrbanLevel + toCell.FarmLevel + toCell.PlantLevel;
+
+        return moveCost ;
+        
+    }
+
+
 #if UNITY_EDITOR
     private void OnDrawGizmosSelected() {
         if ( pathToTravel == null || pathToTravel.Count <= 0) return ;
@@ -178,7 +198,7 @@ public class HexUnit : MonoBehaviour {
     public void Die() {
         if ( Location ) {
             //Location.DecreaseVisibility();
-            hexGrid.DecreaseVisibility(location, visionRange);
+            hexGrid.DecreaseVisibility(location, VisionRange);
             Location.Unit = null ;
         }
         Destroy( gameObject );

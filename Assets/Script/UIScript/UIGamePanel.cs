@@ -14,6 +14,8 @@ public class UIGamePanel : MonoBehaviour {
     public void SetEditMode( bool toggle ) {
         enabled = !toggle ;
         hexGrid.ShowUI( !toggle ) ;
+        if(toggle) Shader.EnableKeyword( "HEX_MAP_EDIT_MODE" );
+        else Shader.DisableKeyword( "HEX_MAP_EDIT_MODE" );
     }
 
     private void Update() {
@@ -40,8 +42,8 @@ public class UIGamePanel : MonoBehaviour {
 
     private void DoPathfinding() {
         if ( UpdateCurrentCell() ) {
-            if ( selectedUnit.IsValidDestination( currentCell ) ) {
-                hexGrid.FindPath(selectedUnit.Location, currentCell, 24);
+            if ( currentCell && selectedUnit.IsValidDestination( currentCell ) ) {
+                hexGrid.FindPath(selectedUnit.Location, currentCell, selectedUnit);
             }
         }
     }

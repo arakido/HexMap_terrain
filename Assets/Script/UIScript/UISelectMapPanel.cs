@@ -87,11 +87,12 @@ public class UISelectMapPanel : MonoBehaviour {
         }
     }
 
+    private const int mapFileVersion = 3 ;
 
     public void Save( string path ) {
         using ( System.IO.FileStream fs = System.IO.File.Open( path, System.IO.FileMode.Create ) ) {
             using ( System.IO.BinaryWriter writer = new System.IO.BinaryWriter( fs ) ) {
-                writer.Write( 0 );
+                writer.Write( mapFileVersion ) ;
                 hexGrid.Save( writer );
             }
         }
@@ -111,7 +112,7 @@ public class UISelectMapPanel : MonoBehaviour {
 
         using ( System.IO.BinaryReader reader = new System.IO.BinaryReader( System.IO.File.OpenRead( path ) ) ) {
             int header = reader.ReadInt32();
-            if ( header == 0 ) hexGrid.Load( reader );
+            if ( header == mapFileVersion) hexGrid.Load( reader );
             else Debug.LogError( "Error :Unknown map format " + header );
         }
     }
