@@ -13,6 +13,7 @@ public class HexGrid : MonoBehaviour {
 
     public HexCell cellPrefab ;
     public HexGridChunk chunkPrefab ;
+
     public Text cellLabelPrefab ;
     public Texture2D noiseSource ;
     public int hashSeed ;
@@ -202,8 +203,7 @@ public class HexGrid : MonoBehaviour {
         position = transform.InverseTransformPoint( position ) ;
         HexCoordinates coordinates = HexCoordinates.FromPositon( position ) ;
         int index = coordinates.X + coordinates.Z * cellCountX + coordinates.Z / 2 ;
-        if ( index < 0 || index >= cells.Length ) return null ;
-        return cells[ index ] ;
+        return GetCell(index) ;
     }
 
     public HexCell GetCell( HexCoordinates coordinates ) {
@@ -211,7 +211,17 @@ public class HexGrid : MonoBehaviour {
         if ( z < 0 || z >= cellCountZ ) return null ;
         int x = coordinates.X + z / 2 ;
         if ( x < 0 || x >= cellCountX ) return null ;
-        return cells[ x + z * cellCountX ] ;
+        return GetCell( x , z ) ;
+    }
+
+    public HexCell GetCell( int xOffset , int zOffset ) {
+
+        return GetCell( xOffset + zOffset * cellCountX ) ;
+    }
+
+    public HexCell GetCell( int cellIndex ) {
+        if (cellIndex < 0 || cellIndex >= cells.Length) return null;
+        return cells[ cellIndex ] ;
     }
 
     public HexCell GetCell( Ray ray ) {

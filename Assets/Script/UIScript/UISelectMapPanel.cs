@@ -52,6 +52,8 @@ public class UISelectMapPanel : MonoBehaviour {
         selectInput.text = "";
         Clean();
         InitMapItems();
+        RefreshProject();
+
     }
 
     public void SeleteButton() {

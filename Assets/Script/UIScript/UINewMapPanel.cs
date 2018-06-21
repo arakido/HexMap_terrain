@@ -6,11 +6,15 @@ using UnityEngine.UI;
 public class UINewMapPanel : MonoBehaviour {
 
     public HexGrid hexGrid;
+    public HexMapGenerator mapGenerator;
+
     public GameObject customizePanle;
     public InputField xInput;
     public Text xErrorText;
     public InputField zInput;
     public Text zErrorText;
+
+    private bool generateMaps = true ;
 
     public void Show() {
         HexMapCamera.Locked = true;
@@ -22,21 +26,28 @@ public class UINewMapPanel : MonoBehaviour {
         gameObject.SetActive( false );
     }
 
-    private void SendMapSize( int x , int z ) {
-        hexGrid.CreateMap( x,z );
+    private void CreatMap( int x , int z ) {
+        if(generateMaps) mapGenerator.GeneratorMap( x,z );
+        else hexGrid.CreateMap( x,z );
         Hide();
     }
 
+
+    public void ToggleMapGeneration(bool toggle) {
+        generateMaps = toggle;
+    }
+
+
     public void SmallButton() {
-        SendMapSize( 20 , 15 );
+        CreatMap( 20 , 15 );
     }
 
     public void MediumButton() {
-        SendMapSize( 40, 30 );
+        CreatMap( 40, 30 );
     }
 
     public void LargeButton() {
-        SendMapSize( 80, 60 );
+        CreatMap( 80, 60 );
     }
 
     public void CustomizeButton() {
@@ -52,8 +63,9 @@ public class UINewMapPanel : MonoBehaviour {
         if ( int.TryParse( xInput.text , out x ) && int.TryParse( zInput.text , out z ) ) {
             if ( !CheckSize( x ) ) return;
             if ( !CheckSize( z ) ) return;
-            SendMapSize( x, z );
+            CreatMap( x, z );
         }
+        HideCustomize() ;
     }
 
     public void XInputCallBack( string msg ) {

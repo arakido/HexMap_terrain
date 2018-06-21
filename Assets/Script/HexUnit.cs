@@ -67,7 +67,8 @@ public class HexUnit : MonoBehaviour {
 
     public void Load( System.IO.BinaryReader reader ,HexGrid grid) {
         HexCoordinates coordinates = HexCoordinates.Load( reader );
-        Location = grid.GetCell(coordinates);
+        hexGrid = grid ;
+        Location = hexGrid.GetCell(coordinates);
         Orientation = reader.ReadSingle(); ;
     }
 

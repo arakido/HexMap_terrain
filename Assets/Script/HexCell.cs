@@ -90,7 +90,7 @@ public class HexCell : MonoBehaviour {
     public void Save( System.IO.BinaryWriter writer ) {
         writer.Write( (byte)TerrainTypeIndex );
         //Debug.Log( " : " +  );
-        writer.Write( (byte)Elevation );
+        writer.Write( (byte)(Elevation + 127) );
         writer.Write( (byte)WaterLevel );
         writer.Write( (byte)UrbanLevel );
         writer.Write( (byte)FarmLevel );
@@ -115,6 +115,7 @@ public class HexCell : MonoBehaviour {
     public void Load( System.IO.BinaryReader reader ) {
         TerrainTypeIndex = reader.ReadByte() ;
         Elevation = reader.ReadByte();
+        Elevation -= 127 ;
         WaterLevel = reader.ReadByte();
         UrbanLevel = reader.ReadByte();
         FarmLevel = reader.ReadByte();
