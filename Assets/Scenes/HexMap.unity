@@ -5161,6 +5161,14 @@ MonoBehaviour:
   regionBorder: 5
   regionCount: 1
   erosionPercentage: 50
+  startingMoisture: 0.1
+  evaporationFactor: 0.5
+  precipitationFactor: 0.25
+  runoffFactor: 0.25
+  seepageFactor: 0.125
+  windDirection: 4
+  windStrength: 4
+  riverPercentage: 10
 --- !u!1 &615937822
 GameObject:
   m_ObjectHideFlags: 0

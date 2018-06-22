@@ -880,7 +880,7 @@ public class HexGridChunk : MonoBehaviour {
         EdgeVertices e2 = new EdgeVertices( center2 + HexMetrics.GetSecondSolidCorner( direction.Opposite() ) ,
                                             center2 + HexMetrics.GetFirstSolidCorner( direction.Opposite() ) ) ;
         if ( cell.HasRiverThroughEdge( direction ) ) {
-            TriangulateEstuary( e1 , e2 ,cell.InComingRive == direction ,indices) ;
+            TriangulateEstuary( e1 , e2 ,cell.HasInComingRiver && cell.InComingRive == direction ,indices) ;
         }
         else {
             waterShore.AddPerturQuad(e1.v1, e1.v2, e2.v1, e2.v2);

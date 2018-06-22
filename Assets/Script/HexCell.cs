@@ -271,7 +271,6 @@ public class HexCell : MonoBehaviour {
     }
 
     public void SetOutGoingRiver( HexDirectionEnum direction ) {
-        if ( GetNeighbor( direction ).IsUnderWater ) return ;
         if ( HasOutGoingRive && OutGoingRive == direction ) return ;
         HexCell neighbor = GetNeighbor( direction ) ;
         if ( !IsValidRiverDestination( neighbor ) ) return;
@@ -503,5 +502,9 @@ public class HexCell : MonoBehaviour {
     public void DecreaseVisibility() {
         visibility -= 1 ;
         if(visibility == 0)ShaderData.RefreshVisibility( this );
+    }
+
+    public void SetMapData( float data ) {
+        ShaderData.SetMapData( this,data );
     }
 }
