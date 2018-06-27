@@ -33,10 +33,10 @@ public class HexMapCamera : MonoBehaviour {
         stick = swivel.GetChild( 0 ) ;
     }
 
-    private void OnEnable() {
-        instance = this ;
-        ValidatePosition();
-    }
+	// Use this for initialization
+	void Start () {
+		
+	}
 
     public static void ValidatePosition() {
         instance.AdjustPostion( 0 , 0 );
@@ -79,23 +79,12 @@ public class HexMapCamera : MonoBehaviour {
         float distance = speed * damping* Time.deltaTime ;
         Vector3 position = transform.localPosition ;
         position += direction * distance ;
-        transform.localPosition = grid.wrapping ? WrapPosition( position ) : ClampPosition( position ) ;
-    }
-
-    private Vector3 WrapPosition( Vector3 position ) {
-        float width = grid.cellCountX * HexMetrics.innerDiameter ;
-        if ( position.x < 0 ) position.x += width;
-        else if ( position.x > width ) position.x -= width;
-
-        float zMax = (grid.cellCountZ - 1) * (1.5f * HexMetrics.outerRadius) ;
-        position.z = Mathf.Clamp( position.z , 0f , zMax ) ;
-        grid.CenterMap( position.x );
-        return position ;
+        transform.localPosition = ClampPosition(position);
     }
 
     //限制摄像机的位置
     private Vector3 ClampPosition( Vector3 position ) {
-        float xMax = (grid.cellCountX /** HexMetrics.chunkSizeX*/ - 0.5f ) * HexMetrics.innerDiameter;
+        float xMax = (grid.cellCountX /** HexMetrics.chunkSizeX*/ - 0.5f ) * (2f * HexMetrics.innerRadius) ;
         float zMax = (grid.cellCountZ /** HexMetrics.chunkSizeZ*/ - 1f ) * (1.5f * HexMetrics.outerRadius);
         position.x = Mathf.Clamp( position.x , 0f , xMax ) ;
         position.z = Mathf.Clamp( position.z , 0 , zMax ) ;

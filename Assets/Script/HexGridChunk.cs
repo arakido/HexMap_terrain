@@ -155,9 +155,9 @@ public class HexGridChunk : MonoBehaviour {
         if ( DirectionOnRight( direction ) ) {
             TrangulateConnection( direction , cell , edge ) ;
         }
-        /*else if ( cell.GetNeighbor( direction ) == null ) {
+        else if ( cell.GetNeighbor( direction ) == null ) {
             NoNeighborConnection( direction , cell , edge ) ;
-        }*/
+        }
 
         if ( cell.IsUnderWater ) {
             TriangulateWater( direction , cell , center ) ;
@@ -202,7 +202,7 @@ public class HexGridChunk : MonoBehaviour {
     private void TrangulateConnection( HexDirectionEnum direction , HexCell cell , EdgeVertices edge ) {
         HexCell neighbor = cell.GetNeighbor( direction ) ;
         if ( neighbor == null ) {
-            //NoNeighborConnection( direction , cell , edge ) ;
+            NoNeighborConnection( direction , cell , edge ) ;
             return ;
         }
         Vector3 bridge = HexMetrics.GetTwoBridge( direction ) ;
@@ -272,7 +272,7 @@ public class HexGridChunk : MonoBehaviour {
                 }
             }
         }
-        /*else {
+        else {
 
             //绘制缺失的小三角 
             HexCell noneCell = new GameObject().AddComponent<HexCell>() ;
@@ -292,7 +292,7 @@ public class HexGridChunk : MonoBehaviour {
             v5.y = 0 ;
             TriangulateCorner( edge.v1 , cell , v5 , noneCell , edge2.v1 , neighbor) ;
             DestroyObject( noneCell.gameObject ) ;
-        }*/
+        }
     }
 
     //仅处理无临边的情况
@@ -876,17 +876,9 @@ public class HexGridChunk : MonoBehaviour {
         water.AddTriangleCellData( indices , weights1 ) ;
 
         Vector3 center2 = neighbor.postion ;
-        if (neighbor.ColumnIndex < cell.ColumnIndex - 1) {
-            center2.x += HexMetrics.wrapSize * HexMetrics.innerDiameter;
-        }
-        else if (neighbor.ColumnIndex > cell.ColumnIndex + 1) {
-            center2.x -= HexMetrics.wrapSize * HexMetrics.innerDiameter;
-        }
         center2.y = center.y ;
         EdgeVertices e2 = new EdgeVertices( center2 + HexMetrics.GetSecondSolidCorner( direction.Opposite() ) ,
                                             center2 + HexMetrics.GetFirstSolidCorner( direction.Opposite() ) ) ;
-        
-
         if ( cell.HasRiverThroughEdge( direction ) ) {
             TriangulateEstuary( e1 , e2 ,cell.HasInComingRiver && cell.InComingRive == direction ,indices) ;
         }
@@ -909,18 +901,10 @@ public class HexGridChunk : MonoBehaviour {
 
         HexCell nextNeighbor = cell.GetNeighbor( direction.Next() ) ;
         if ( nextNeighbor != null ) {
-
-            Vector3 center3 = nextNeighbor.postion ;
-            if ( nextNeighbor.ColumnIndex < cell.ColumnIndex - 1 ) {
-                center3.x += HexMetrics.wrapSize * HexMetrics.innerDiameter ;
-            }
-            else if ( nextNeighbor.ColumnIndex > cell.ColumnIndex + 1 ) {
-                center3.x -= HexMetrics.wrapSize * HexMetrics.innerDiameter ;
-            }
-
-            Vector3 v3 = center3 + ( nextNeighbor.IsUnderWater
-                                        ? HexMetrics.GetWaterFirstCorner( direction.Previous() )
-                                        : HexMetrics.GetFirstSolidCorner( direction.Previous() )) ;
+            Vector3 v3 = nextNeighbor.postion
+                         + (nextNeighbor.IsUnderWater
+                                ? HexMetrics.GetWaterFirstCorner( direction.Previous() )
+                                : HexMetrics.GetFirstSolidCorner( direction.Previous() )) ;
             v3.y = center.y ;
 
             waterShore.AddPerturTriangle( e1.v5 , e2.v5 , v3) ;
