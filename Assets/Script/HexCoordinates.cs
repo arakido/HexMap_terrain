@@ -7,12 +7,17 @@ public class HexCoordinates {
     [SerializeField] private int pointY ;
     [SerializeField] private int pointZ;
 
-    public int X { get { return pointX ; } }
+    public int X { get { return pointX ; }set { pointX = value ; } }
     public int Z { get { return pointZ; } }
     public int Y { get { return pointY; } }
 
 
     public HexCoordinates( int x , int z ) {
+        if ( HexMetrics.Wrapping ) {
+            int oX = x + z / 2;    //x 在方法FromOffsetCoordinates 中是由x - z / 2得来的
+            if ( oX < 0 ) x += HexMetrics.wrapSize ;
+            else if ( oX >= HexMetrics.wrapSize ) x -= HexMetrics.wrapSize ;
+        }
         pointX = x ;
         pointZ = z ;
         pointY = -X - Z ;
@@ -29,7 +34,7 @@ public class HexCoordinates {
     /// <param name="position"></param>
     /// <returns></returns>
     public static HexCoordinates FromPositon( Vector3 position ) {
-        float x = position.x / (HexMetrics.innerRadius * 2f) ;
+        float x = position.x / HexMetrics.innerDiameter;
         float y = -x ;
         float offset = position.z / (HexMetrics.outerRadius * 3f) ;
         x -= offset ;
@@ -48,8 +53,21 @@ public class HexCoordinates {
     }
 
     public int DistancesTo( HexCoordinates other ) {
-        //使用的是立方体坐标，XYZ坐标总和为0，对其取绝对值后XYZ的和等于最大绝对值的2倍
-        return (Mathf.Abs( X - other.X ) + Mathf.Abs( Y - other.Y ) + Mathf.Abs( Z - other.Z )) / 2 ;
+        /*//使用的是立方体坐标，XYZ坐标总和为0，对其取绝对值后XYZ的和等于最大绝对值的2倍
+        return (Mathf.Abs( X - other.X ) + Mathf.Abs( Y - other.Y ) + Mathf.Abs( Z - other.Z )) / 2 ;*/
+
+        int xy = Mathf.Abs(X - other.X) + Mathf.Abs(Y - other.Y);
+        if ( HexMetrics.Wrapping ) {
+            other.X += HexMetrics.wrapSize ;
+            int xyWrapped = Mathf.Abs( X - other.X) + Mathf.Abs( Y - other.Y ) ;
+            if ( xyWrapped < xy ) xy = xyWrapped ;
+            else {
+                other.X -= HexMetrics.wrapSize * 2 ;
+                xyWrapped = Mathf.Abs(X - other.X) + Mathf.Abs(Y - other.Y);
+                if (xyWrapped < xy) xy = xyWrapped;
+            }
+        }
+        return (xy + Mathf.Abs( Z - other.Z )) / 2 ;
     }
 
     public override string ToString() {
