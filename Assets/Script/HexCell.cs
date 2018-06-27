@@ -20,8 +20,9 @@ public class HexCell : MonoBehaviour {
     public HexCell NextWithSamePriority { get ; set ; }
     public HexCellShaderData ShaderData { get ; set ; }
 
+
     public int Index { get ; set ; }
-    public int ColumnIndex { get ; set ; }
+
     
     public int TerrainTypeIndex {
         get { return terrainTypeIndex ; }
@@ -88,6 +89,7 @@ public class HexCell : MonoBehaviour {
 
     public void Save( System.IO.BinaryWriter writer ) {
         writer.Write( (byte)TerrainTypeIndex );
+        //Debug.Log( " : " +  );
         writer.Write( (byte)(Elevation + 127) );
         writer.Write( (byte)WaterLevel );
         writer.Write( (byte)UrbanLevel );
@@ -106,8 +108,8 @@ public class HexCell : MonoBehaviour {
         }
 
         writer.Write( (byte)roadFlags );
-        writer.Write( walled) ;
-        writer.Write( IsExplored ) ;
+        writer.Write( walled ? (byte) 1 : (byte) 0 ) ;
+        writer.Write( IsExplored ? (byte) 1 : (byte) 0 ) ;
     }
 
     public void Load( System.IO.BinaryReader reader ) {
@@ -132,8 +134,8 @@ public class HexCell : MonoBehaviour {
             roads[ i ] = (roadFlags & (1 << i)) != 0 ;
         }
 
-        walled = reader.ReadBoolean();
-        IsExplored = reader.ReadBoolean();
+        walled = reader.ReadByte() == 1;
+        IsExplored = reader.ReadByte() == 1;
         ShaderData.RefreshVisibility( this );
     }
 
