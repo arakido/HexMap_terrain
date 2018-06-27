@@ -8,7 +8,7 @@ Material:
   m_PrefabInternal: {fileID: 0}
   m_Name: HexMaterial
   m_Shader: {fileID: 4800000, guid: f5e3f3cd40d65f7438e3787c43a89b5f, type: 3}
-  m_ShaderKeywords: SHOW_MAP_DATA _EMISSION
+  m_ShaderKeywords: _EMISSION
   m_LightmapFlags: 1
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -84,7 +84,7 @@ Material:
     - _OcclusionStrength: 1
     - _Parallax: 0.02
     - _Shininess: 0.078125
-    - _ShowMapData: 1
+    - _ShowMapData: 0
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1

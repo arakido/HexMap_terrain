@@ -15,6 +15,7 @@ public class UINewMapPanel : MonoBehaviour {
     public Text zErrorText;
 
     private bool generateMaps = true ;
+    private bool wrapping = true ;
 
     public void Show() {
         HexMapCamera.Locked = true;
@@ -27,14 +28,18 @@ public class UINewMapPanel : MonoBehaviour {
     }
 
     private void CreatMap( int x , int z ) {
-        if(generateMaps) mapGenerator.GeneratorMap( x,z );
-        else hexGrid.CreateMap( x,z );
+        if(generateMaps) mapGenerator.GeneratorMap( x,z , wrapping);
+        else hexGrid.CreateMap( x,z , wrapping);
         Hide();
     }
 
 
     public void ToggleMapGeneration(bool toggle) {
         generateMaps = toggle;
+    }
+
+    public void ToggleWrapping( bool toggle ) {
+        wrapping = toggle ;
     }
 
 

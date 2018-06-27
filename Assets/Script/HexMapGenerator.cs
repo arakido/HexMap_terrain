@@ -29,6 +29,12 @@ public class HexMapGenerator : MonoBehaviour {
     public HexDirectionEnum windDirection = HexDirectionEnum.TopLeft;   //风向
     [Range( 1f , 10f )] public float windStrength = 4f ;    //风力
     [Range( 0 , 20 )] public float riverPercentage = 10 ;   //河流占比
+    [Range( 0f , 1f )] public float extraLakeProbability = 0.25f ;  //湖泊占比
+    [Range( 0f , 1f )] public float lowTemperature = 0f ;   //低温
+    [Range( 0f , 1f )] public float highTemperature = 1f ;  //高温
+    [Range( 0f , 1f )] public float temperatureJitter = 0.1f ;  //温度波动
+    public HemisphereMode hemisphere;
+
 
     private int cellCount ;
     private int landCells ;
@@ -48,7 +54,8 @@ public class HexMapGenerator : MonoBehaviour {
     private List<ClimateData> climateList = new List<ClimateData>() ;
     private List<ClimateData> nextClimateList = new List<ClimateData>() ; 
 
-    public void GeneratorMap( int x , int z ) {
+    public void GeneratorMap( int x , int z ,bool wrapping) {
+
         Random.State originalRandomState = Random.state ;
         if(!useFixedSeed) {
             randmSeed = Random.Range(0, int.MaxValue);
@@ -59,7 +66,7 @@ public class HexMapGenerator : MonoBehaviour {
         }
 
         cellCount = x * z ;
-        hexGrid.CreateMap( x , z ) ;
+        hexGrid.CreateMap( x , z , wrapping) ;
         if ( searchFrontier == null ) searchFrontier = new HexCellPriorityQueue() ;
         for (int i = 0; i < cellCount; i++) {
             hexGrid.GetCell(i).WaterLevel = waterLevel;
@@ -82,23 +89,26 @@ public class HexMapGenerator : MonoBehaviour {
         if ( regionList == null ) regionList = new List<MapRegion>() ;
         else  regionList.Clear();
 
+        int borderX = hexGrid.wrapping ? regionBorder : mapBorderX ;
+
+        MapRegion mapRegion;
         switch ( regionCount ) {
             case 2:
-                MapRegion mapRegion;
                 if ( Random.value < 0.5f ) {
-                    mapRegion.xMin = mapBorderX ;
+                    mapRegion.xMin = borderX;
                     mapRegion.xMax = x / 2 - regionBorder ;
                     mapRegion.zMin = mapBorderZ ;
                     mapRegion.zMax = z - mapBorderZ ;
                     regionList.Add( mapRegion ) ;
 
                     mapRegion.xMin = x / 2 + regionBorder ;
-                    mapRegion.xMax = x - mapBorderX ;
+                    mapRegion.xMax = x - borderX;
                     regionList.Add( mapRegion ) ;
                 }
                 else {
-                    mapRegion.xMin = mapBorderX ;
-                    mapRegion.xMax = x - mapBorderX ;
+                    if (hexGrid.wrapping) borderX = 0;
+                    mapRegion.xMin = borderX;
+                    mapRegion.xMax = x - borderX;
                     mapRegion.zMin = mapBorderZ ;
                     mapRegion.zMax = z / 2 - regionBorder ;
                     regionList.Add( mapRegion ) ;
@@ -109,7 +119,7 @@ public class HexMapGenerator : MonoBehaviour {
                 }
                 break ;
             case 3:
-                mapRegion.xMin = mapBorderX;
+                mapRegion.xMin = borderX;
                 mapRegion.xMax = x / 3 - regionBorder;
                 mapRegion.zMin = mapBorderZ;
                 mapRegion.zMax = z - mapBorderZ;
@@ -120,31 +130,32 @@ public class HexMapGenerator : MonoBehaviour {
                 regionList.Add(mapRegion);
 
                 mapRegion.xMin = x * 2 / 3 + regionBorder;
-                mapRegion.xMax = x - mapBorderX;
+                mapRegion.xMax = x - borderX;
                 regionList.Add(mapRegion);
                 break ;
             case 4:
-                mapRegion.xMin = mapBorderX;
+                mapRegion.xMin = borderX;
                 mapRegion.xMax = x / 2 - regionBorder;
                 mapRegion.zMin = mapBorderZ;
                 mapRegion.zMax = z / 2 - regionBorder;
                 regionList.Add(mapRegion);
 
                 mapRegion.xMin = x / 2 + regionBorder;
-                mapRegion.xMax = x - mapBorderX;
+                mapRegion.xMax = x - borderX;
                 regionList.Add(mapRegion);
 
                 mapRegion.zMin = z / 2 + regionBorder;
                 mapRegion.zMax = z - mapBorderZ;
                 regionList.Add(mapRegion);
 
-                mapRegion.xMin = mapBorderX;
+                mapRegion.xMin = borderX;
                 mapRegion.xMax = x / 2 - regionBorder;
                 regionList.Add(mapRegion);
                 break ;
             default:
-                mapRegion.xMin = mapBorderX;
-                mapRegion.xMax = x - mapBorderX;
+                if ( hexGrid.wrapping ) borderX = 0 ;
+                mapRegion.xMin = borderX;
+                mapRegion.xMax = x - borderX;
                 mapRegion.zMin = mapBorderZ;
                 mapRegion.zMax = z - mapBorderZ;
                 regionList.Add(mapRegion);
@@ -200,7 +211,7 @@ public class HexMapGenerator : MonoBehaviour {
                 HexCell neighbor = current.GetNeighbor( d ) ;
                 if ( neighbor && neighbor.SearchPhase < searchFrontierPhase ) {
                     neighbor.SearchPhase = searchFrontierPhase ;
-                    neighbor.Distance = neighbor.coordinates.DistancesTo( center ) ;
+                    neighbor.Distance = neighbor.coordinates.DistanceTo( center ) ;
                     neighbor.SearchHeuristic = Random.value < jitterProbability ? 1 : 0 ;
                     searchFrontier.Enqueue( neighbor );
                 }
@@ -238,7 +249,7 @@ public class HexMapGenerator : MonoBehaviour {
                 HexCell neighbor = current.GetNeighbor( d ) ;
                 if ( neighbor && neighbor.SearchPhase < searchFrontierPhase ) {
                     neighbor.SearchPhase = searchFrontierPhase ;
-                    neighbor.Distance = neighbor.coordinates.DistancesTo( center ) ;
+                    neighbor.Distance = neighbor.coordinates.DistanceTo( center ) ;
                     neighbor.SearchHeuristic = Random.value < jitterProbability ? 1 : 0 ;
                     searchFrontier.Enqueue( neighbor ) ;
                 }
@@ -404,6 +415,32 @@ public class HexMapGenerator : MonoBehaviour {
 
     #endregion
 
+    #region 温度
+
+    public enum HemisphereMode {
+        Both,North,South,
+    }
+
+    private int temperatureJitterChannel ;
+
+    private float DetermineTemperature( HexCell cell ) {
+        float latitude = (float) cell.coordinates.Z / hexGrid.cellCountZ ;
+        if ( hemisphere == HemisphereMode.Both ) {
+            latitude *= 2f ;
+            if ( latitude > 1f ) latitude = 2 - latitude ;
+        }
+        else if ( hemisphere == HemisphereMode.North ) {
+            latitude = 1f - latitude ;
+        }
+        float temoerature = Mathf.LerpUnclamped( lowTemperature , highTemperature , latitude ) ;
+        temoerature *= 1f - (cell.ViewElevation - waterLevel) / (elevationMaxmum - waterLevel + 1f) ;
+        float jitter = HexMetrics.SampleNoise( cell.Position * 0.1f )[ temperatureJitterChannel ] ;
+        temoerature += (jitter * 2f - 1f) * temperatureJitter ;
+        return temoerature;
+    }
+
+    #endregion
+
     #region 湖和河流
 
     private void CreateRivers() {
@@ -432,11 +469,20 @@ public class HexMapGenerator : MonoBehaviour {
             int index = Random.Range( 0 , riverOrigins.Count ) ;
             int lastIndex = riverOrigins.Count - 1 ;
             HexCell origin = riverOrigins[ index ] ;
+            riverOrigins[index] = riverOrigins[lastIndex];
+            riverOrigins.RemoveAt(lastIndex);
+
             if ( !origin.HasRiver ) {
-                riverBudget -= CreateRiver( origin ) ;
+                bool isValidOrigin = true ;
+                for ( HexDirectionEnum d = 0 ; d < HexDirectionEnum.Length ; d++ ) {
+                    HexCell neighbor = origin.GetNeighbor( d ) ;
+                    if ( neighbor && (neighbor.HasRiver || neighbor.IsUnderWater) ) {
+                        isValidOrigin = false ;
+                        break ;
+                    }
+                }
+                if(isValidOrigin) riverBudget -= CreateRiver( origin ) ;
             }
-            riverOrigins[ index ] = riverOrigins[ lastIndex ] ;
-            riverOrigins.RemoveAt( lastIndex );
         }
 
         if ( riverBudget > 0 ) {
@@ -453,13 +499,18 @@ public class HexMapGenerator : MonoBehaviour {
         HexCell cell = origin ;
         HexDirectionEnum direction = HexDirectionEnum.BottomLeft;
         while ( !cell.IsUnderWater ) {
+            int minNeighbirElevation = int.MaxValue ;
             flowDirections.Clear();
             for ( HexDirectionEnum d = 0 ; d < HexDirectionEnum.Length ; d++ ) {
                 HexCell neighbor = cell.GetNeighbor( d ) ;
 
-                if ( !neighbor || neighbor == origin || neighbor.HasInComingRiver ) continue ;
+                if ( !neighbor ) continue ;
+                if ( neighbor.Elevation < minNeighbirElevation ) minNeighbirElevation = neighbor.Elevation ;
+                if ( neighbor == origin || neighbor.HasInComingRiver ) continue ;
+
                 int delta = neighbor.Elevation - cell.Elevation ;
                 if ( delta > 0 ) continue ;
+
                 if ( neighbor.HasOutGoingRive ) {
                     cell.SetOutGoingRiver( d );
                     return length ;
@@ -476,11 +527,25 @@ public class HexMapGenerator : MonoBehaviour {
                 flowDirections.Add( d );
             }
 
-            if ( flowDirections.Count <= 0 ) return length > 1 ? length : 0 ;
+            if ( flowDirections.Count <= 0 ) {
+                if ( length == 1 ) return 0 ;
+                if ( minNeighbirElevation >= cell.Elevation ) {
+                    cell.WaterLevel = minNeighbirElevation ;
+                    if ( minNeighbirElevation == cell.Elevation ) {
+                        cell.Elevation = minNeighbirElevation - 1 ;
+                    }
+                }
+                break ;
+            }
 
             direction = flowDirections[ Random.Range( 0 , flowDirections.Count ) ] ;
             cell.SetOutGoingRiver( direction );
             length += 1 ;
+
+            if ( minNeighbirElevation >= cell.Elevation && Random.value < extraLakeProbability) {
+                cell.WaterLevel = cell.Elevation ;
+                cell.Elevation -= 1 ;
+            }
             cell = cell.GetNeighbor( direction ) ;
             
         }
@@ -490,26 +555,109 @@ public class HexMapGenerator : MonoBehaviour {
 
     #endregion
 
+    #region 生物
+
+    private float[] temperatureBands = {0.1f , 0.3f , 0.6f} ;
+    private float[] moistureBands = {0.12f , 0.28f , 0.85f} ;
+
+    struct Biome {
+        public int terrain ;
+        public int plant ;
+
+        public Biome( int _terrain ,int _plant) {
+            terrain = _terrain;
+            plant = _plant ;
+        }
+    }
+
+    /*
+    *  水分为x轴，温度为Y轴
+    *    _____________________
+    *    | 12 | 13  | 14  | 15 |       //0,4,8,12 沙漠
+    * 0.6|————|—————|—————|————|       //1，2，3， 雪
+    *    |  8 |  9  | 10  | 11 |       //5，6，7， 泥
+    * 0.3|————|—————|—————|————|       //9，10，11，13，14，15 草地
+    *    |  4 |  5  |  6  |  7 |
+    * 0.1|————|—————|—————|————|
+    *    |  0 |  1  |  2  |  3 |
+    *    |____|_____|_____|____|
+    *        0.12  0.28  0.85
+    */
+    private Biome[] biomes = {   new Biome( 0 , 0 ) , new Biome( 4 , 0 ) , new Biome( 4 , 0 ) , new Biome( 4 , 0 ) ,
+                                 new Biome( 0 , 0 ) , new Biome( 2 , 0 ) , new Biome( 2 , 1 ) , new Biome( 2 , 2 ) ,
+                                 new Biome( 0 , 0 ) , new Biome( 1 , 0 ) , new Biome( 1 , 1 ) , new Biome( 1 , 2 ) ,
+                                 new Biome( 0 , 0 ) , new Biome( 1 , 1 ) , new Biome( 1 , 2 ) , new Biome( 1 , 3 )
+                             } ;
+
+    #endregion
+
     private void SetTerrainType() {
+        temperatureJitterChannel = Random.Range( 0 , 4 ) ;
+        int rockDesertElevation = elevationMaxmum - (elevationMaxmum - waterLevel) / 2 ;
         for ( int i = 0 ; i < cellCount ; i++ ) {
             HexCell cell = hexGrid.GetCell( i ) ;
+            float temperature = DetermineTemperature( cell ) ;
+            //cell.SetMapData( temperature );
+
             float moisture = climateList[ i ].moisture ;
             if ( !cell.IsUnderWater ) {
                 //cell.TerrainTypeIndex = cell.Elevation - cell.WaterLevel;
-                if ( moisture < 0.05f ) cell.TerrainTypeIndex = 4 ;
+                /*if ( moisture < 0.05f ) cell.TerrainTypeIndex = 4 ;
                 else if ( moisture < 0.12f ) cell.TerrainTypeIndex = 0 ;
                 else if ( moisture < 0.28f ) cell.TerrainTypeIndex = 3 ;
-                else if ( moisture < 0.85f ) cell.TerrainTypeIndex = 1 ;
+                else if ( moisture < 0.85f ) cell.TerrainTypeIndex = 1 ;*/
+
+
+                int t = 0 ;
+                for ( ; t < temperatureBands.Length ; t++ ) {
+                    if ( temperature < temperatureBands[ t ] ) break ;
+                }
+                int m = 0 ;
+                for ( ; m < moistureBands.Length ; m++ ) {
+                    if ( moisture < moistureBands[ m ] ) break ;
+                }
+                Biome cellBiome = biomes[ t * 4 + m ] ;
+                if ( cellBiome.terrain == 0 ) {
+                    if ( cell.Elevation >= rockDesertElevation ) {
+                        cellBiome.terrain = 3 ;
+                    }
+                    if ( cell.Elevation == elevationMaxmum ) cellBiome.terrain = 4 ;
+                }
+                if ( cellBiome.terrain == 4 ) cellBiome.plant = 0 ;
+                else if ( cellBiome.plant < 3 && cell.HasRiver ) cell.PlantLevel += 1 ;
+                cell.TerrainTypeIndex = cellBiome.terrain ;
+                cell.PlantLevel = cellBiome.plant ;
             }
-            else cell.TerrainTypeIndex = 2;
+            else {
+                int terrain ;
+                if ( cell.Elevation == waterLevel - 1 ) {
+                    int cliffs = 0 , slopes = 0 ;
+                    for ( HexDirectionEnum d = 0 ; d < HexDirectionEnum.Length ; d++ ) {
+                        HexCell neighbor = cell.GetNeighbor( d ) ;
+                        if ( !neighbor ) continue ;
+                        int delta = neighbor.Elevation - cell.WaterLevel ;
+                        if ( delta == 0 ) slopes += 1 ;
+                        else if ( delta > 0 ) cliffs += 1 ;
+                    }
+                    if ( cliffs + slopes > 3 ) terrain = 1 ;
+                    else if ( cliffs > 0 ) terrain = 3 ;
+                    else if ( slopes > 0 ) terrain = 0 ;
+                    else terrain = 1 ;
+                }
+                else if ( cell.Elevation >= waterLevel ) terrain = 1 ;
+                else if ( cell.Elevation < 0 ) terrain = 3 ;
+                else terrain = 2 ;
+                if ( terrain == 1 && temperature < temperatureBands[ 0 ] ) terrain = 2 ;
+                cell.TerrainTypeIndex = terrain;
+            }
 
             //cell.SetMapData( (cell.Elevation - elevationMaxmum / (float) (elevationMinimum - elevationMinimum)) ) ;
             //cell.SetMapData(climateList[i].clouds);
             //cell.SetMapData(climateList[i].moisture);
-            float data = moisture * (cell.Elevation - waterLevel) / (elevationMaxmum - waterLevel);
+            /*float data = moisture * (cell.Elevation - waterLevel) / (elevationMaxmum - waterLevel);
             if(data >0.75f) cell.SetMapData( 1f );
             else if(data > 0.5f) cell.SetMapData( 0.5f );
-            else if(data >0.25f)cell.SetMapData( 0.25f );
+            else if(data >0.25f)cell.SetMapData( 0.25f );*/
             //cell.SetMapData(data);
         }
     }

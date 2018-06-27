@@ -21,6 +21,7 @@
 
 		#pragma multi_compile _ HEX_MAP_EDIT_MODE
 
+		#include "HexMetrics.cginc"
 		#include "HexCellData.cginc"
 
 		sampler2D _MainTex;
@@ -59,7 +60,7 @@
 		void surf (Input IN, inout SurfaceOutputStandardSpecular o) {
 			// Albedo comes from a texture tinted by color
 			//fixed4 c = tex2D (_MainTex, IN.uv_MainTex) * _Color;
-			float4 noise = tex2D(_MainTex, IN.worldPos * 0.025);
+			float4 noise = tex2D(_MainTex, IN.worldPos * ( TILING_SCALE * 3 ) );
 			fixed4 c = _Color * ((noise.y * 0.75 + 0.25) * IN.visibility.x);
 			float blend = IN.uv_MainTex.x;
 			blend *= noise.x + 0.5;

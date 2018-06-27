@@ -9,8 +9,8 @@ public class HexMetrics {
     public static float outerToInner = Mathf.Sin( 60 * Mathf.Deg2Rad ) ;
     public static float innerToOuter = 1 / outerToInner ;
     public const float outerRadius = 10f; //六边型同心圆的半径
-    //六边形边长
-    public static float innerRadius = outerRadius * outerToInner ;
+    public static float innerRadius = outerRadius * outerToInner ;  //中心点到边的距离
+    public static float innerDiameter = innerRadius * 2f ;  //六边形宽度
 
     public const float solidFactor = 0.8f;     //内三角所占的比例
     public const float blendFactor = 1 - solidFactor;   //外梯形的比例
@@ -34,6 +34,9 @@ public class HexMetrics {
 
     public const int hashGridSize = 256 ; //散列网格数
     private static HexHash[] hashGrid;//散列网格
+
+    public static int wrapSize ;    //地图循环X方向的个数
+    public static bool Wrapping { get { return wrapSize > 0 ; } }   //地图是否循环
 
     public static Vector3[] corners {
         get {
@@ -123,7 +126,12 @@ public class HexMetrics {
     
 
     public static Vector4 SampleNoise( Vector3 position ) {
-        return noiseSource.GetPixelBilinear( position.x * noiseScale, position.z * noiseScale) ;
+        Vector4 sample = noiseSource.GetPixelBilinear( position.x * noiseScale , position.z * noiseScale ) ;
+        if ( Wrapping && position.x < innerDiameter * 1.5f ) {
+            Vector4 sample2 = noiseSource.GetPixelBilinear( (position.x + wrapSize * innerDiameter) * noiseScale , position.z * noiseScale ) ;
+            sample = Vector4.Lerp( sample2 , sample , position.x * (1f / innerDiameter) - 0.5f ) ;
+        }
+        return sample;
     }
 
     public static Vector3 Perturb(Vector3 position) {

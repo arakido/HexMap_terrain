@@ -11,18 +11,17 @@ public class HexCell : MonoBehaviour {
 
     public HexGridChunk chunk;
 
-    public Vector3 postion { get { return transform.localPosition; } }
+    public Vector3 Position { get { return transform.localPosition; } }
 
-    public HexCell pathFrom { get ; set ; }
+    public HexCell PathFrom { get ; set ; }
     public int SearchHeuristic { get ; set ; }
     public int SearchPriority { get { return Distance + SearchHeuristic ; } }
     public int SearchPhase { get ; set ; }  //0未在边界中  1 处于边界中  2已移除边界
     public HexCell NextWithSamePriority { get ; set ; }
     public HexCellShaderData ShaderData { get ; set ; }
 
-
     public int Index { get ; set ; }
-
+    public int ColumnIndex { get ; set ; }
     
     public int TerrainTypeIndex {
         get { return terrainTypeIndex ; }
@@ -89,7 +88,6 @@ public class HexCell : MonoBehaviour {
 
     public void Save( System.IO.BinaryWriter writer ) {
         writer.Write( (byte)TerrainTypeIndex );
-        //Debug.Log( " : " +  );
         writer.Write( (byte)(Elevation + 127) );
         writer.Write( (byte)WaterLevel );
         writer.Write( (byte)UrbanLevel );
@@ -108,8 +106,8 @@ public class HexCell : MonoBehaviour {
         }
 
         writer.Write( (byte)roadFlags );
-        writer.Write( walled ? (byte) 1 : (byte) 0 ) ;
-        writer.Write( IsExplored ? (byte) 1 : (byte) 0 ) ;
+        writer.Write( walled) ;
+        writer.Write( IsExplored ) ;
     }
 
     public void Load( System.IO.BinaryReader reader ) {
@@ -134,8 +132,8 @@ public class HexCell : MonoBehaviour {
             roads[ i ] = (roadFlags & (1 << i)) != 0 ;
         }
 
-        walled = reader.ReadByte() == 1;
-        IsExplored = reader.ReadByte() == 1;
+        walled = reader.ReadBoolean();
+        IsExplored = reader.ReadBoolean();
         ShaderData.RefreshVisibility( this );
     }
 

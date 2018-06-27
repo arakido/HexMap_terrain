@@ -48,6 +48,10 @@ public class HexCellPriorityQueue {
         count--; //Enqueue函数中count增加的， 但实际上是没有增加的，只是把cell的优先级改变了而已
     }
 
+    public bool Conten( HexCell cell ) {
+        return list.Contains( cell ) ;
+    }
+
     public void Clear() {
         list.Clear() ;
         count = 0 ;
