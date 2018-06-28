@@ -515,6 +515,11 @@ public class HexMapGenerator : MonoBehaviour {
                     cell.SetOutGoingRiver( d );
                     return length ;
                 }
+                if (neighbor.IsUnderWater) {
+                    cell.SetOutGoingRiver(d);
+                    return length;
+                }
+
                 if ( delta <= 0 ) {
                     flowDirections.Add( d );
                     flowDirections.Add( d );

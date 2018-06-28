@@ -2,7 +2,7 @@
 using System.Collections;
 
 [System.Serializable]
-public class HexCoordinates {
+public struct HexCoordinates {
     [SerializeField] private int pointX;
     [SerializeField] private int pointZ;
 
@@ -53,7 +53,7 @@ public class HexCoordinates {
 
     public int DistanceTo( HexCoordinates other ) {
         /*//使用的是立方体坐标，XYZ坐标总和为0，对其取绝对值后XYZ的和等于最大绝对值的2倍*/
-        return (Mathf.Abs( X - other.X ) + Mathf.Abs( Y - other.Y ) + Mathf.Abs( Z - other.Z )) / 2 ;
+        //return (Mathf.Abs( X - other.X ) + Mathf.Abs( Y - other.Y ) + Mathf.Abs( Z - other.Z )) / 2 ;
 
         int xy = Mathf.Abs(X - other.X) + Mathf.Abs(Y - other.Y);
         if ( HexMetrics.Wrapping ) {
@@ -66,7 +66,6 @@ public class HexCoordinates {
                 if (xyWrapped < xy) xy = xyWrapped;
             }
         }
-        Debug.LogError(HexMetrics.wrapSize + ":"+ToString() );
         return (xy + Mathf.Abs(Z - other.Z)) / 2;
     }
 
